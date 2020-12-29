@@ -1,4 +1,6 @@
-﻿using MIConvexHull;
+﻿using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
+using MIConvexHull;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,21 +25,29 @@ namespace VolumeIntersection
                 throw new ArgumentException("Not enough cells.");
             }
 
+            // Save dimension of the provided vertices
+            int vertexDimension = vertices[0].Position.Length;
+
             var faceDictionary = new Dictionary<int[], Face<TVector>>(new FaceComparer());
             var volumeCells = new List<Cell<TVector>>();
 
             foreach (var cell in cells)
             {
+                // Save indices of the cell
                 var cellIndices = cell.Indices;
+
+                // Save dimension of the provided cells
+                int cellDimension = cellIndices.Length;
+
+                // Find vertices of the cell
                 var cellVertices = new double[cellIndices.Length][];
-                
                 for(int i = 0; i < cellIndices.Length; i++)
                 {
                     cellVertices[i] = vertices[cellIndices[i]].Position;
                 }
 
-                var centroid = new double[cellVertices[0].Length];
-
+                // Compute centroid of the cell
+                var centroid = new double[vertexDimension];
                 for(int i = 0; i < centroid.Length; i++)
                 {
                     for(int j = 0; j < cellVertices.Length; j++)
@@ -54,27 +64,36 @@ namespace VolumeIntersection
                     Centroid = new TVector() { Position = centroid }
                 };
 
-                for (int i = 0; i < cellVertices.Length; i++)
+                for (int i = 0; i < cellDimension; i++)
                 {
                     // Get vertices of the face
-                    double[][] faceVertices = new double[cellVertices.Length - 1][];
-                    for (int j = 0; j < cellVertices.Length - 1; j++)
+                    double[][] faceVertices = new double[cellDimension - 1][];
+                    for (int j = 0; j < cellDimension - 1; j++)
                     {
-                        faceVertices[j] = cellVertices[(i + j) % cellVertices.Length];
+                        faceVertices[j] = cellVertices[(i + j) % cellDimension];
                     }
 
-                    double c;
-                    double[] normal;
+                    double[] halfSpace = new double[cellDimension];
 
-
-                    double[,] matrix = new double[faceVertices[0].Length + 1, faceVertices[0].Length + 1];
-                    for (int j = 0; j < faceVertices.Length; j++)
+                    for(int j = 0; j < cellDimension; j++)
                     {
+                        double[,] m = new double[vertexDimension, vertexDimension];
 
+                        for(int k = 0; k < faceVertices.Length; k++)
+                        {
+                            for(int l = 0; l < vertexDimension; l++)
+                            {
+                                m[k, ] = faceVertices[k][l];
+                            }
+                        }
+
+                        Matrix<double> matrix = DenseMatrix.OfArray(m);
+                        halfSpace[j] = matrix.Determinant();
                     }
-
                     
-                    } else if(faceVertices.Length == 3)
+
+
+                    if(faceVertices.Length == 3)
                     {
                         // Get two vectors between points that define a plane
                         double[] vector1 = { faceVertices[0][0] - faceVertices[1][0], faceVertices[0][1] - faceVertices[1][1], faceVertices[0][2] - faceVertices[1][2] };
@@ -136,8 +155,18 @@ namespace VolumeIntersection
 
         public static VolumeData<TVector> FromVoronoi(List<TVector> generators)
         {
+            if(generators.Count < 2)
+            {
+                throw new ArgumentException("Not enough generators");
+            }
+
+            // Save dimension of the provided generators
+            int dimension = generators[0].Position.Length;
+
+            // Create voronoi diagram from the generators.
             var voronoiMesh = VoronoiMesh.Create(generators);
 
+            // Prepare dictionary of voronoi cells
             var cellDictionary = new Cell<TVector>[generators.Count];
             
             // Iteratate over all voronoi vertices.
@@ -168,13 +197,17 @@ namespace VolumeIntersection
                             var targetPosition = tetrahedron.Vertices[j].Position;
 
                             // Compute a vector that points towards the source position
-                            double[] normal = { sourcePosition[0] - targetPosition[0], sourcePosition[1] - targetPosition[1], sourcePosition[2] - targetPosition[2] };
+                            double[] normal = new double[dimension];
+                            for(int k = 0; k < dimension; k++)
+                            {
+                                normal[k] = sourcePosition[k] - targetPosition[k];
+                            }
 
                             // Compute a point in the middle between the two positions
-                            double[] middlePosition = {
-                                (sourcePosition[0] + targetPosition[0]) / 2,
-                                (sourcePosition[1] + targetPosition[1]) / 2,
-                                (sourcePosition[2] + targetPosition[2]) / 2
+                            double[] middlePosition = new double[dimension];
+                            for(int k = 0; k < dimension; k++)
+                            {
+                                middlePosition[k] = (sourcePosition[k] + targetPosition[k]) / 2;
                             };
 
                             // Compute last element of a half space standard form that separates the source and target positions and goes through the middle position
@@ -189,10 +222,17 @@ namespace VolumeIntersection
                                 Target = targetCell
                             });
 
+                            // Change direction of the normal
+                            double[] reverseNormal = new double[dimension];
+                            for(int k = 0; k < dimension; k++)
+                            {
+                                reverseNormal[k] = -normal[k];
+                            }
+
                             // Add the neighbor
                             targetCell.Edges.Add(new Face<TVector>()
                             {
-                                Normal = new TVector() { Position = new double[] { -normal[0], -normal[1], -normal[2] } },
+                                Normal = new TVector() { Position = reverseNormal },
                                 C = -c,
                                 Source = targetCell,
                                 Target = sourceCell
