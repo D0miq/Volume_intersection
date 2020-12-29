@@ -4,4 +4,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="4.12.0" />
+    <PackageReference Include="MIConvexHull" Version="1.1.19.1019" />
+  </ItemGroup>
+
 </Project>

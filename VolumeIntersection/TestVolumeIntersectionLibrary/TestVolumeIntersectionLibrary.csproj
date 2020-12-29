@@ -49,8 +49,13 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tetrahedralization.cs" />
+    <Compile Include="TetrahedralizationReader.cs" />
+    <Compile Include="Vertex.cs" />
+    <Compile Include="VolumeDataTest.cs" />
+    <Compile Include="VolumeSlicerTest.cs" />
+    <Compile Include="VolumeUnionTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
