@@ -4,92 +4,158 @@ using System.Linq;
 
 namespace VolumeIntersection
 {
-    public static class VolumeIntersection<TVector>
-         where TVector : IVector, new()
+    public static class VolumeIntersection
     {
-        private class Pair
+        private class Pair<TVector> where TVector : IVector
         {
-            public int FirstIndex;
-            public int SecondIndex;
+            public Cell<TVector> FirstCell;
+            public Cell<TVector> SecondCell;
 
-            public Pair(int firstIndex, int secondIndex)
+            public Pair(Cell<TVector> firstCell, Cell<TVector> secondCell)
             {
-                this.FirstIndex = firstIndex;
-                this.SecondIndex = secondIndex;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is Pair pair &&
-                       FirstIndex == pair.FirstIndex &&
-                       SecondIndex == pair.SecondIndex;
-            }
-
-            public override int GetHashCode()
-            {
-                int hashCode = -495750798;
-                hashCode = hashCode * -1521134295 + FirstIndex.GetHashCode();
-                hashCode = hashCode * -1521134295 + SecondIndex.GetHashCode();
-                return hashCode;
+                this.FirstCell = firstCell;
+                this.SecondCell = secondCell;
             }
         }
 
-        public static VolumeData<TVector> Intersect(VolumeData<TVector> volumeData1, VolumeData<TVector> volumeData2)
+        /// <summary>
+        /// Finds intersection between triangulation (tetrahedralization) and voronoi diagram.
+        /// Method starts traversing from a random triangle (tetrahedron) and checks for different components of a triangulation (tetrahedralization).
+        /// </summary>
+        /// <typeparam name="TVector">Type of a used vector.</typeparam>
+        /// <typeparam name="TCell">Type of a used triangle (tetrahedron).</typeparam>
+        /// <param name="vertices">Vertices of a triangulation (tetrahedralization).</param>
+        /// <param name="cells">Cells of a triangulation (tetrahedralization).</param>
+        /// <param name="generators">Voronoi generators.</param>
+        /// <returns>Volumetric data with intersections.</returns>
+        public static VolumeData<TVector> Intersect<TVector, TCell>(List<TVector> vertices, List<TCell> cells, List<TVector> generators) where TVector : IVector, new() where TCell : ITriangleCell
         {
-            // Generate random point inside volume data and find cells that contain it
-            
-            // TODO Najít náhodný tetrahedron a jeho centroid podle centroidu najít vornoi buňku
-            
+            var triangulationVolumeData = VolumeData<TVector>.FromTriangulation(vertices, cells);
+            var voronoiVolumeData = VolumeData<TVector>.FromVoronoi(generators);
+
+            var volumeData = new VolumeData<TVector>()
+            {
+                Cells = new List<Cell<TVector>>()
+            };
+
+            for (int i = 0; i < triangulationVolumeData.Cells.Count; i++)
+            {
+                var triangulationCell = triangulationVolumeData.Cells[i];
+
+                if (triangulationCell.Visited)
+                {
+                    continue;
+                }
+
+                var voronoiCell = voronoiVolumeData.Cells.Find(cell => cell.Contains(triangulationCell.Centroid));
+
+                var intersections = FindIntersectingCells(triangulationCell, voronoiCell);
+
+                volumeData.Cells.AddRange(intersections);
+            }
+
+            return volumeData;
+        }
+
+        /// <summary>
+        /// Finds intersection between two generic volumetric data.
+        /// Methods starts traversing on a random point and checks if it is contained inside volumetric data.
+        /// Method ignores multiple components.
+        /// </summary>
+        /// <typeparam name="TVector">Type of a used vector.</typeparam>
+        /// <param name="volumeData1">First volumetric data.</param>
+        /// <param name="volumeData2">Second volumetric data.</param>
+        /// <returns>Volumetric data with intersections.</returns>
+        public static VolumeData<TVector> Intersect<TVector>(VolumeData<TVector> volumeData1, VolumeData<TVector> volumeData2) where TVector : IVector, new()
+        {
             Random rd = new Random();
+            int firstIndex, secondIndex;
 
-            var start = new TVector() { Position = new double[] { } };
+            // Generate random point inside volume data and find cells that contain it
+            do
+            {
+                var start = new TVector() { Position = new double[] { } };
 
-            int firstIndex = volumeData1.Cells.FindIndex(cell => cell.Contains(start));
-            int secondIndex = volumeData2.Cells.FindIndex(cell => cell.Contains(start));
+                firstIndex = volumeData1.Cells.FindIndex(cell => cell.Contains(start));
+                secondIndex = volumeData2.Cells.FindIndex(cell => cell.Contains(start));
+            } while (firstIndex == -1 || secondIndex == -1);
+            
+            var intersections = FindIntersectingCells(volumeData1.Cells[firstIndex], volumeData2.Cells[secondIndex]);
+
+            return new VolumeData<TVector>()
+            {
+                Cells = intersections
+            };
+        }
 
 
+        private static List<Cell<TVector>> FindIntersectingCells<TVector>(Cell<TVector> firstCell, Cell<TVector> secondCell) where TVector : IVector, new()
+        {
+            var intersections = new List<Cell<TVector>>();
 
             // Create a queue
-            var visitedPairs = new HashSet<Pair>();
-            var cellQueue = new Queue<Pair>();
+            var visitedPairs = new HashSet<Pair<TVector>>();
+            var cellQueue = new Queue<Pair<TVector>>();
 
-            var pair = new Pair(firstIndex, secondIndex);
+            var pair = new Pair<TVector>(firstCell, secondCell);
             visitedPairs.Add(pair);
             cellQueue.Enqueue(pair);
 
-            while(cellQueue.Count != 0)
+            while (cellQueue.Count != 0)
             {
-                pair = cellQueue.Dequeue();
-
-                var firstCell = volumeData1.Cells[pair.FirstIndex];
-                var secondCell = volumeData2.Cells[pair.SecondIndex];
+                firstCell.Visited = true;
+                secondCell.Visited = true;
 
                 var edges = RemoveHalfSpaces(firstCell, secondCell);
-                
-                foreach(var edge in edges)
+
+                foreach (var edge in edges)
                 {
-                    if(edge.Source == firstCell)
+                    if (edge.Source == firstCell)
                     {
-                        pair = new Pair(/* edge.Target a secondCell */);
-                    } else
+                        pair = new Pair<TVector>(edge.Target, secondCell);
+                    }
+                    else
                     {
-                        pair = new Pair(/* edge.Target a firstCell */);
+                        pair = new Pair<TVector>(firstCell, edge.Target);
                     }
 
-                    if(visitedPairs.Add(pair))
+                    if (visitedPairs.Add(pair))
                     {
                         cellQueue.Enqueue(pair);
                     }
                 }
 
-                // 
+                var cell = new Cell<TVector>()
+                {
+                    Edges = edges,
+                    //Centroid = FindCentroid(edges)
+                };
+
+                intersections.Add(cell);
+
+                pair = cellQueue.Dequeue();
+
+                firstCell = pair.FirstCell;
+                secondCell = pair.SecondCell;
             }
+
+            return intersections;
         }
 
-        private static List<Face<TVector>> RemoveHalfSpaces(Cell<TVector> c1, Cell<TVector> c2)
+        //private static TVector FindCentroid<TVector>(List<Edge<TVector>> edges) where TVector : IVector
+        //{
+        //    double areaSum = 0;
+
+        //    for(int i = 0; i < edges.Count; i++)
+        //    {
+
+        //    }
+        //}
+
+        private static List<Edge<TVector>> RemoveHalfSpaces<TVector>(Cell<TVector> c1, Cell<TVector> c2) where TVector : IVector, new()
         {
-            var usedHalfSpaces = new HashSet<Face<TVector>>();
-            var halfSpaces = new List<Face<TVector>>(c1.Edges.Count + c2.Edges.Count);
+            var usedHalfSpaces = new HashSet<Edge<TVector>>();
+            var halfSpaces = new List<Edge<TVector>>(c1.Edges.Count + c2.Edges.Count);
             halfSpaces.AddRange(c1.Edges);
             halfSpaces.AddRange(c2.Edges);
 
@@ -114,7 +180,7 @@ namespace VolumeIntersection
             return usedHalfSpaces.ToList();
         }
 
-        private static TVector FindIntersectionPoint(Face<TVector> e1, Face<TVector> e2, Face<TVector> e3)
+        private static TVector FindIntersectionPoint<TVector>(Edge<TVector> e1, Edge<TVector> e2, Edge<TVector> e3) where TVector : IVector, new()
         {
             var e1Normal = e1.Normal.Position;
             var e2Normal = e2.Normal.Position;
