@@ -28,7 +28,7 @@ namespace VolumeIntersection
             // Save dimension of the provided vertices
             int vertexDimension = vertices[0].Position.Length;
 
-            var faceDictionary = new Dictionary<int[], Face<TVector>>(new FaceComparer());
+            var edgeDictionary = new Dictionary<int[], Edge<TVector>>(new EdgeComparer());
             var volumeCells = new List<Cell<TVector>>();
 
             foreach (var cell in cells)
@@ -36,12 +36,9 @@ namespace VolumeIntersection
                 // Save indices of the cell
                 var cellIndices = cell.Indices;
 
-                // Save dimension of the provided cells
-                int cellDimension = cellIndices.Length;
-
                 // Find vertices of the cell
                 var cellVertices = new double[cellIndices.Length][];
-                for(int i = 0; i < cellIndices.Length; i++)
+                for(int i = 0; i < cellVertices.Length; i++)
                 {
                     cellVertices[i] = vertices[cellIndices[i]].Position;
                 }
@@ -64,61 +61,110 @@ namespace VolumeIntersection
                     Centroid = new TVector() { Position = centroid }
                 };
 
-                for (int i = 0; i < cellDimension; i++)
+                // Iterate over all faces of a cell and add them to volumetric data
+                for (int i = 0; i < cellVertices.Length; i++)
                 {
                     // Get vertices of the face
-                    double[][] faceVertices = new double[cellDimension - 1][];
-                    for (int j = 0; j < cellDimension - 1; j++)
+                    double[][] edgeVertices = new double[cellVertices.Length - 1][];
+                    for (int j = 0; j < edgeVertices.Length; j++)
                     {
-                        faceVertices[j] = cellVertices[(i + j) % cellDimension];
+                        edgeVertices[j] = cellVertices[(i + j) % cellVertices.Length];
                     }
 
-                    double[] halfSpace = new double[cellDimension];
+                    // Create array that holds elements of a standard (implicit) form of a half space in n dimensions
+                    double[] halfSpace = new double[vertexDimension + 1];
 
-                    for(int j = 0; j < cellDimension; j++)
+                    // Compute half space standard form from vertices that generates it.
+                    // It can be calculated with a system of linear equations. I use determinant to do it.
+                    // Example of the calculation of a plane from three vertices:
+                    //  | i   j  k l |
+                    //  | a1 b1 c1 1 |
+                    //  | a2 b2 c2 1 |
+                    //  | a3 b3 c3 1 |
+                    // i, j, k, l are vectors with just one coordinate set to 1
+                    // i = (1, 0, 0, 0)
+                    // j = (0, 1, 0, 0)
+                    // k = (0, 0, 1, 0)
+                    // l = (0, 0, 0, 1)
+                    // a, b, c are coordinates of a vertex
+                    // Elements of a standard form of a half space are computed as determinant of this matrix. 
+                    // However I have no means to combine vectors and scalars inside the matrix so I use a way around it.
+                    // I use Laplace expansion to calculate result of the determinant above and  
+                    // compute determinants of its submatrices directly and assign results to the elements of the standard form.
+                    // Submatrices are
+                    // | b1 c1 1 | | a1 c1 1 | | a1 b1 1 | | a1 b1 c1 |
+                    // | b2 c2 1 | | a2 c2 1 | | a2 b2 1 | | a2 b2 c2 |
+                    // | b3 c3 1 | | a3 c3 1 | | a3 b3 1 | | a3 b3 c3 |
+
+                    // Compute determinant for each variable of the half space standard form
+                    for (int j = 0; j < halfSpace.Length; j++)
                     {
-                        double[,] m = new double[vertexDimension, vertexDimension];
+                        // Create a submatrix
+                        double[] m = new double[vertexDimension * vertexDimension];
 
-                        for(int k = 0; k < faceVertices.Length; k++)
+                        int matrixIndex = 0;
+
+                        // Fill in values of the submatrix
+                        for (int k = 0; k < vertexDimension; k++)
                         {
-                            for(int l = 0; l < vertexDimension; l++)
+                            // Skip k-th coordinate when its column shouldn't be inside the submatrix
+                            if (j != k)
                             {
-                                m[k, ] = faceVertices[k][l];
+                                for (int l = 0; l < edgeVertices.Length; l++)
+                                {
+                                    m[(matrixIndex * edgeVertices.Length) + l] = edgeVertices[l][k];
+                                }
+
+                                matrixIndex++;
                             }
                         }
 
-                        Matrix<double> matrix = DenseMatrix.OfArray(m);
-                        halfSpace[j] = matrix.Determinant();
-                    }
-                    
-
-
-                    if(faceVertices.Length == 3)
-                    {
-                        // Get two vectors between points that define a plane
-                        double[] vector1 = { faceVertices[0][0] - faceVertices[1][0], faceVertices[0][1] - faceVertices[1][1], faceVertices[0][2] - faceVertices[1][2] };
-                        double[] vector2 = { faceVertices[2][0] - faceVertices[1][0], faceVertices[2][1] - faceVertices[1][1], faceVertices[2][2] - faceVertices[1][2] };
-
-                        // Compute normal of the triangle
-                        normal = MathUtils.CrossProduct(vector1, vector2);
-
-                        // Compute vector from centroid to one of the vertices
-                        double[] vectorFromCentroid = { faceVertices[1][0] - centroid[0], faceVertices[1][1] - centroid[1], faceVertices[1][2] - centroid[2] };
-
-                        // Check widing order
-                        double order = MathUtils.Dot(normal, vectorFromCentroid);
-
-                        // Swap order of vertices if neccessary
-                        if (order > 0)
+                        // Add 1 to the last collumn, except the last submatrix.
+                        if(j != halfSpace.Length - 1)
                         {
-                            normal = MathUtils.CrossProduct(vector2, vector1);
+                            for (int k = 0; k < edgeVertices.Length; k++)
+                            {
+                                m[((vertexDimension - 1) * edgeVertices.Length) + k] = 1;
+                            }
                         }
 
-                        c = MathUtils.Dot(normal, faceVertices[1]);
+                        // Compute determinant of the submatrix
+                        Matrix<double> matrix = Matrix<double>.Build.Dense(vertexDimension, vertexDimension, m);
+                        halfSpace[j] = (j % 2) == 0 ? 1 * matrix.Determinant() : -1 * matrix.Determinant();
+                    }
+
+                    // Get normal from the standard form
+                    double[] normal = new double[vertexDimension];
+                    for (int j = 0; j < normal.Length; j++)
+                    {
+                        normal[j] = halfSpace[j];
+                    }
+
+                    double c = -halfSpace[vertexDimension];
+
+                    // Compute vector from centroid to one of the vertices
+                    double[] vectorFromCentroid = new double[vertexDimension];
+                    for(int j = 0; j < vectorFromCentroid.Length; j++)
+                    {
+                        vectorFromCentroid[j] = edgeVertices[0][j] - centroid[j];
+                    }
+
+                    // Check widing order
+                    double order = MathUtils.Dot(normal, vectorFromCentroid);
+
+                    // Swap order of vertices if neccessary
+                    if (order > 0)
+                    {
+                        for(int j = 0; j < normal.Length; j++)
+                        {
+                            normal[j] = -normal[j];
+                        }
+
+                        c = -c;
                     }
 
                     // Create new edge
-                    var edge = new Face<TVector>()
+                    var edge = new Edge<TVector>()
                     {
                         Normal = new TVector() { Position = normal },
                         C = c,
@@ -128,18 +174,23 @@ namespace VolumeIntersection
                     volumeCell.Edges.Add(edge);
 
                     // Get a triangle face from the tetrahedron
-                    int[] face = { cellIndices[i], cellIndices[(i + 1) % cellIndices.Length], cellIndices[(i + 2) % cellIndices.Length] };
-                    Array.Sort(face);
+                    int[] edgeIndices = new int[edgeVertices.Length];
+                    for (int j = 0; j < edgeIndices.Length; j++)
+                    {
+                        edgeIndices[j] = cellIndices[(i + j) % cellVertices.Length];
+                    }
+
+                    Array.Sort(edgeIndices);
 
                     // If dictionary contained the face before add neighbors
-                    if (faceDictionary.TryGetValue(face, out Face<TVector> neighborEdge))
+                    if (edgeDictionary.TryGetValue(edgeIndices, out Edge<TVector> neighborEdge))
                     {
                         edge.Target = neighborEdge.Source;
                         neighborEdge.Target = volumeCell;
                     }
                     else
                     {
-                        faceDictionary.Add(face, edge);
+                        edgeDictionary.Add(edgeIndices, edge);
                     }
                 }
 
@@ -205,7 +256,7 @@ namespace VolumeIntersection
 
                             // Compute a point in the middle between the two positions
                             double[] middlePosition = new double[dimension];
-                            for(int k = 0; k < dimension; k++)
+                            for(int k = 0; k < middlePosition.Length; k++)
                             {
                                 middlePosition[k] = (sourcePosition[k] + targetPosition[k]) / 2;
                             };
@@ -214,7 +265,7 @@ namespace VolumeIntersection
                             double c = MathUtils.Dot(normal, middlePosition);
 
                             // Add the neighbor
-                            sourceCell.Edges.Add(new Face<TVector>()
+                            sourceCell.Edges.Add(new Edge<TVector>()
                             {
                                 Normal = new TVector() { Position = normal },
                                 C = c,
@@ -224,13 +275,13 @@ namespace VolumeIntersection
 
                             // Change direction of the normal
                             double[] reverseNormal = new double[dimension];
-                            for(int k = 0; k < dimension; k++)
+                            for(int k = 0; k < reverseNormal.Length; k++)
                             {
                                 reverseNormal[k] = -normal[k];
                             }
 
                             // Add the neighbor
-                            targetCell.Edges.Add(new Face<TVector>()
+                            targetCell.Edges.Add(new Edge<TVector>()
                             {
                                 Normal = new TVector() { Position = reverseNormal },
                                 C = -c,

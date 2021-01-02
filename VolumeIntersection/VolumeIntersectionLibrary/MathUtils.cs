@@ -10,16 +10,6 @@ namespace VolumeIntersection
     {
         public const double Eps = 0.0000001f;
 
-        public static double Det(double[,] m)
-        {
-            if(m.GetLength(0) != m.GetLength(1))
-            {
-                throw new ArgumentException("Both dimensions must be the same.");
-            }
-
-
-        }
-
         public static double Det3x3(double[,] m)
         {
             if (m.GetLength(0) != 3 || m.GetLength(1) != 3)
