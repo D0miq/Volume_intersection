@@ -15,7 +15,7 @@ namespace VolumeIntersection
     /// The same goes for higher dimension.
     /// </summary>
     /// <typeparam name="TVector"></typeparam>
-    public class Face<TVector> where TVector : IVector
+    public class Edge<TVector> where TVector : IVector
     {
         public TVector Normal { get; set; }
 

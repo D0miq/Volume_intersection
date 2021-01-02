@@ -10,11 +10,13 @@ namespace VolumeIntersection
     {
         public TVector Centroid { get; set; }
 
-        public List<Face<TVector>> Edges { get; set; } 
+        public List<Edge<TVector>> Edges { get; set; } 
+
+        public bool Visited { get; set; }
 
         public Cell()
         {
-            this.Edges = new List<Face<TVector>>();
+            this.Edges = new List<Edge<TVector>>();
         }
 
         public bool Contains(TVector point)

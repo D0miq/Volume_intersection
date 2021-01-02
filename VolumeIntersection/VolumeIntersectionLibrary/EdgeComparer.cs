@@ -4,7 +4,7 @@ using System.Text;
 
 namespace VolumeIntersection
 {
-    class FaceComparer : IEqualityComparer<int[]>
+    class EdgeComparer : IEqualityComparer<int[]>
     {
         public bool Equals(int[] x, int[] y)
         {
