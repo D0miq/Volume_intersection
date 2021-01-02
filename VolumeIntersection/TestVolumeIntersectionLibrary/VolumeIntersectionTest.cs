@@ -1,12 +1,12 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestVolumeUnion
+namespace TestVolumeIntersection
 {
     [TestClass]
-    public class VolumeUnionTest
+    public class VolumeIntersectionTest
     {
         [TestMethod]
-        public void TestGetSlices()
+        public void TestIntersect()
         {
         }
     }

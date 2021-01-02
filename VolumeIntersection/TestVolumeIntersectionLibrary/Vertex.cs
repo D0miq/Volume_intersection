@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using VolumeUnion;
+using VolumeIntersection;
 
-namespace TestVolumeUnion
+namespace TestVolumeIntersection
 {
     class Vertex : IVector
     {
@@ -15,6 +15,11 @@ namespace TestVolumeUnion
 
         public Vertex()
         {
+        }
+
+        public Vertex(double x, double y)
+        {
+            this.Position = new double[] { x, y };
         }
 
         public Vertex(double x, double y, double z)

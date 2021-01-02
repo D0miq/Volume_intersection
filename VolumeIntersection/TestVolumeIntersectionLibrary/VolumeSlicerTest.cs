@@ -1,10 +1,10 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using VolumeUnion;
-using VolumeUnion.SliceVisualisation;
+using VolumeIntersection;
+using VolumeIntersection.SliceVisualisation;
 
-namespace TestVolumeUnion
+namespace TestVolumeIntersection
 {
     [TestClass]
     public class VolumeSlicerTest
@@ -50,14 +50,14 @@ namespace TestVolumeUnion
 
             cell.Edges = new List<Edge<Vertex>>() { edge1, edge2, edge3, edge4 };
 
-            var volumeData = new VolumeUnion.VolumeData<Vertex>()
+            var volumeData = new VolumeData<Vertex>()
             {
                 BoundingBox = boundingBox,
                 Cells = new List<Cell<Vertex>>() { cell }
             };
 
             var bitmap = new System.Drawing.Bitmap(600, 800);
-            VolumeUnion.SliceVisualisation.VolumeSlicer.Slice(bitmap, 2, 0.1f, volumeData);
+            VolumeSlicer.Slice(bitmap, 2, 0.1f, volumeData);
             bitmap.Save("bitmap.png");
         }
 
@@ -90,7 +90,7 @@ namespace TestVolumeUnion
             var reader = new TetrahedralizationReader();
             var tetrahedralization = reader.Read("bigdata.dat");
 
-            var volumeData = VolumeData<Vertex>.FromTetrahedralization(tetrahedralization.Vertices, tetrahedralization.Indices);
+            var volumeData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
 
             double xMin = double.MaxValue;
             double xMax = double.MinValue;

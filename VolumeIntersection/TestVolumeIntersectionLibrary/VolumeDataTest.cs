@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using VolumeUnion;
+using VolumeIntersection;
 
-namespace TestVolumeUnion
+namespace TestVolumeIntersection
 {
     [TestClass]
     public class VolumeDataTest
@@ -26,7 +26,25 @@ namespace TestVolumeUnion
         }
 
         [TestMethod]
-        public void TestFromTetrahedralizationSingleTetrahedron()
+        public void TestFromTriangulationSingleTriangle()
+        {
+            var vertices = new List<Vertex>()
+            {
+                new Vertex(0, 0),
+                new Vertex(1, 0),
+                new Vertex(0, 1)
+            };
+
+            var tetrahedra = new List<Tetrahedron>()
+            {
+                new Tetrahedron(0, 1, 2)
+            };
+
+            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, tetrahedra);
+        }
+
+        [TestMethod]
+        public void TestFromTriangulationSingleTetrahedron()
         {
             var vertices = new List<Vertex>()
             {
@@ -41,16 +59,16 @@ namespace TestVolumeUnion
                 new Tetrahedron(0, 1, 2, 3)
             };
 
-            var volumeData = VolumeData<Vertex>.FromTetrahedralization(vertices, tetrahedra);
+            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, tetrahedra);
         }
 
         [TestMethod]
-        public void TestFromTetrahedraliazation()
+        public void TestFromTriangulation()
         {
             var reader = new TetrahedralizationReader();
             var tetrahedralization = reader.Read("smalldata.dat");
 
-            var volumeData = VolumeData<Vertex>.FromTetrahedralization(tetrahedralization.Vertices, tetrahedralization.Indices);
+            var volumeData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
         }
     }
 }

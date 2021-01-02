@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using VolumeUnion;
 
-namespace TestVolumeUnion
+namespace TestVolumeIntersection
 {
     class TetrahedralizationReader
     {
