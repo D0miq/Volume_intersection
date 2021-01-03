@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MathNet.Numerics.LinearAlgebra;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,6 +34,66 @@ namespace VolumeIntersection
             double[,] sub4 = { { m[1, 0], m[1, 1], m[1, 2] }, { m[2, 0], m[2, 1], m[2, 2] }, { m[3, 0], m[3, 1], m[3, 2] } };
 
             return m[0, 0] * Det3x3(sub1) - m[0, 1] * Det3x3(sub2) + m[0, 2] * Det3x3(sub3) - m[0, 3] * Det3x3(sub4);
+        }
+
+        public static double[] LinearEquationsDet(double[,] vectors)
+        {
+            int dimension = vectors.GetLength(1);
+
+            // Create array that holds elements of a standard (implicit) form of a half space in n dimensions
+            double[] halfSpace = new double[dimension + 1];
+
+            // Compute half space standard form from vertices that generates it.
+            // It can be calculated with a system of linear equations. I use determinant to do it.
+            // Example of the calculation of a plane from three vertices:
+            //  | i   j  k l |
+            //  | a1 b1 c1 1 |
+            //  | a2 b2 c2 1 |
+            //  | a3 b3 c3 1 |
+            // i, j, k, l are vectors with just one coordinate set to 1
+            // i = (1, 0, 0, 0)
+            // j = (0, 1, 0, 0)
+            // k = (0, 0, 1, 0)
+            // l = (0, 0, 0, 1)
+            // a, b, c are coordinates of a vertex
+            // Elements of a standard form of a half space are computed as determinant of this matrix. 
+            // However I have no means to combine vectors and scalars inside the matrix so I use a way around it.
+            // I use Laplace expansion to calculate result of the determinant above and  
+            // compute determinants of its submatrices directly and assign results to the elements of the standard form.
+            // Submatrices are
+            // | b1 c1 1 | | a1 c1 1 | | a1 b1 1 | | a1 b1 c1 |
+            // | b2 c2 1 | | a2 c2 1 | | a2 b2 1 | | a2 b2 c2 |
+            // | b3 c3 1 | | a3 c3 1 | | a3 b3 1 | | a3 b3 c3 |
+
+            // Compute determinant for each variable of the half space standard form
+            for (int j = 0; j < halfSpace.Length; j++)
+            {
+                // Create a submatrix
+                double[] m = new double[dimension * dimension];
+
+                int matrixIndex = 0;
+
+                // Fill in values of the submatrix
+                for (int k = 0; k < dimension; k++)
+                {
+                    // Skip k-th coordinate when its column shouldn't be inside the submatrix
+                    if (j != k)
+                    {
+                        for (int l = 0; l < vectors.Length; l++)
+                        {
+                            m[(matrixIndex * vectors.Length) + l] = vectors[l,k];
+                        }
+
+                        matrixIndex++;
+                    }
+                }
+
+                // Compute determinant of the submatrix
+                Matrix<double> matrix = Matrix<double>.Build.Dense(dimension, dimension, m);
+                halfSpace[j] = (j % 2) == 0 ? 1 * matrix.Determinant() : -1 * matrix.Determinant();
+            }
+
+            return halfSpace;
         }
 
         public static double LengthSquared(double[] v)

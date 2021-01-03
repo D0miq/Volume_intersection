@@ -15,12 +15,12 @@ namespace VolumeIntersection
 
         public static VolumeData<TVector> FromTriangulation<TCell>(List<TVector> vertices, List<TCell> cells) where TCell : ITriangleCell
         {
-            if(vertices.Count < 3)
+            if (vertices.Count < 3)
             {
                 throw new ArgumentException("Not enough vertices.");
             }
 
-            if(cells.Count < 1)
+            if (cells.Count < 1)
             {
                 throw new ArgumentException("Not enough cells.");
             }
@@ -28,6 +28,8 @@ namespace VolumeIntersection
             // Save dimension of the provided vertices
             int vertexDimension = vertices[0].Position.Length;
 
+            var boundingBox = ComputeBoundingBox(vertices, vertexDimension);
+            
             var edgeDictionary = new Dictionary<int[], Edge<TVector>>(new EdgeComparer());
             var volumeCells = new List<Cell<TVector>>();
 
@@ -64,74 +66,32 @@ namespace VolumeIntersection
                 // Iterate over all faces of a cell and add them to volumetric data
                 for (int i = 0; i < cellVertices.Length; i++)
                 {
+                    // Get a triangle face from the tetrahedron
+                    int[] edgeIndices = new int[cellVertices.Length - 1];
+                    for (int j = 0; j < edgeIndices.Length; j++)
+                    {
+                        edgeIndices[j] = cellIndices[(i + j) % cellVertices.Length];
+                    }
+
                     // Get vertices of the face
-                    double[][] edgeVertices = new double[cellVertices.Length - 1][];
+                    double[][] edgeVertices = new double[edgeIndices.Length][];
                     for (int j = 0; j < edgeVertices.Length; j++)
                     {
-                        edgeVertices[j] = cellVertices[(i + j) % cellVertices.Length];
+                        edgeVertices[j] = cellVertices[cellIndices[j]];
                     }
 
-                    // Create array that holds elements of a standard (implicit) form of a half space in n dimensions
-                    double[] halfSpace = new double[vertexDimension + 1];
-
-                    // Compute half space standard form from vertices that generates it.
-                    // It can be calculated with a system of linear equations. I use determinant to do it.
-                    // Example of the calculation of a plane from three vertices:
-                    //  | i   j  k l |
-                    //  | a1 b1 c1 1 |
-                    //  | a2 b2 c2 1 |
-                    //  | a3 b3 c3 1 |
-                    // i, j, k, l are vectors with just one coordinate set to 1
-                    // i = (1, 0, 0, 0)
-                    // j = (0, 1, 0, 0)
-                    // k = (0, 0, 1, 0)
-                    // l = (0, 0, 0, 1)
-                    // a, b, c are coordinates of a vertex
-                    // Elements of a standard form of a half space are computed as determinant of this matrix. 
-                    // However I have no means to combine vectors and scalars inside the matrix so I use a way around it.
-                    // I use Laplace expansion to calculate result of the determinant above and  
-                    // compute determinants of its submatrices directly and assign results to the elements of the standard form.
-                    // Submatrices are
-                    // | b1 c1 1 | | a1 c1 1 | | a1 b1 1 | | a1 b1 c1 |
-                    // | b2 c2 1 | | a2 c2 1 | | a2 b2 1 | | a2 b2 c2 |
-                    // | b3 c3 1 | | a3 c3 1 | | a3 b3 1 | | a3 b3 c3 |
-
-                    // Compute determinant for each variable of the half space standard form
-                    for (int j = 0; j < halfSpace.Length; j++)
+                    double[,] vectors = new double[edgeVertices.Length, vertexDimension + 1];
+                    for(int j = 0; j < edgeVertices.Length; j++)
                     {
-                        // Create a submatrix
-                        double[] m = new double[vertexDimension * vertexDimension];
-
-                        int matrixIndex = 0;
-
-                        // Fill in values of the submatrix
-                        for (int k = 0; k < vertexDimension; k++)
+                        for(int k = 0; k < vertexDimension; k++)
                         {
-                            // Skip k-th coordinate when its column shouldn't be inside the submatrix
-                            if (j != k)
-                            {
-                                for (int l = 0; l < edgeVertices.Length; l++)
-                                {
-                                    m[(matrixIndex * edgeVertices.Length) + l] = edgeVertices[l][k];
-                                }
-
-                                matrixIndex++;
-                            }
+                            vectors[j, k] = edgeVertices[j][k];
                         }
 
-                        // Add 1 to the last collumn, except the last submatrix.
-                        if(j != halfSpace.Length - 1)
-                        {
-                            for (int k = 0; k < edgeVertices.Length; k++)
-                            {
-                                m[((vertexDimension - 1) * edgeVertices.Length) + k] = 1;
-                            }
-                        }
-
-                        // Compute determinant of the submatrix
-                        Matrix<double> matrix = Matrix<double>.Build.Dense(vertexDimension, vertexDimension, m);
-                        halfSpace[j] = (j % 2) == 0 ? 1 * matrix.Determinant() : -1 * matrix.Determinant();
+                        vectors[j, vertexDimension] = 1;
                     }
+
+                    var halfSpace = MathUtils.LinearEquationsDet(vectors);
 
                     // Get normal from the standard form
                     double[] normal = new double[vertexDimension];
@@ -173,13 +133,6 @@ namespace VolumeIntersection
 
                     volumeCell.Edges.Add(edge);
 
-                    // Get a triangle face from the tetrahedron
-                    int[] edgeIndices = new int[edgeVertices.Length];
-                    for (int j = 0; j < edgeIndices.Length; j++)
-                    {
-                        edgeIndices[j] = cellIndices[(i + j) % cellVertices.Length];
-                    }
-
                     Array.Sort(edgeIndices);
 
                     // If dictionary contained the face before add neighbors
@@ -199,6 +152,7 @@ namespace VolumeIntersection
 
             return new VolumeData<TVector>()
             {
+                BoundingBox = boundingBox,
                 Cells = volumeCells
             };
             
@@ -213,6 +167,8 @@ namespace VolumeIntersection
 
             // Save dimension of the provided generators
             int dimension = generators[0].Position.Length;
+
+            var boundingBox = ComputeBoundingBox(generators, dimension);
 
             // Create voronoi diagram from the generators.
             var voronoiMesh = VoronoiMesh.Create(generators);
@@ -295,6 +251,7 @@ namespace VolumeIntersection
 
             return new VolumeData<TVector>()
             {
+                BoundingBox = boundingBox,
                 Cells = cellDictionary.ToList()
             };
         }
@@ -310,6 +267,46 @@ namespace VolumeIntersection
             }
 
             return cell;
+        }
+
+        private static BoundingBox<TVector> ComputeBoundingBox(List<TVector> vertices, int vertexDimension)
+        {
+            double[] min = new double[vertexDimension];
+            for (int i = 0; i < min.Length; i++)
+            {
+                min[i] = double.MaxValue;
+            }
+
+            double[] max = new double[vertexDimension];
+            for (int i = 0; i < min.Length; i++)
+            {
+                max[i] = double.MinValue;
+            }
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                var position = vertices[i].Position;
+
+                for (int j = 0; j < position.Length; j++)
+                {
+                    if (min[j] > position[j])
+                    {
+                        min[j] = position[j];
+                    }
+
+                    if (max[j] < position[j])
+                    {
+                        max[j] = position[j];
+                    }
+                }
+            }
+
+            return new BoundingBox<TVector>()
+            {
+                Min = new TVector() { Position = min },
+                Max = new TVector() { Position = max }
+            };
+
         }
     }
 }
