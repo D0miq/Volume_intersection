@@ -38,10 +38,10 @@ namespace VolumeIntersection
 
         public static double[] LinearEquationsDet(double[][] vectors)
         {
-            int dimension = vectors.GetLength(1);
-
+            int dimension = vectors[0].Length;
+            int subMatrixSize = dimension - 1;
             // Create array that holds elements of a standard (implicit) form of a half space in n dimensions
-            double[] halfSpace = new double[dimension + 1];
+            double[] halfSpace = new double[dimension];
 
             // Compute half space standard form from vertices that generates it.
             // It can be calculated with a system of linear equations. I use determinant to do it.
@@ -69,7 +69,7 @@ namespace VolumeIntersection
             for (int j = 0; j < halfSpace.Length; j++)
             {
                 // Create a submatrix
-                double[] m = new double[dimension * dimension];
+                double[] m = new double[subMatrixSize * subMatrixSize];
 
                 int matrixIndex = 0;
 
@@ -89,7 +89,7 @@ namespace VolumeIntersection
                 }
 
                 // Compute determinant of the submatrix
-                Matrix<double> matrix = Matrix<double>.Build.Dense(dimension, dimension, m);
+                Matrix<double> matrix = Matrix<double>.Build.Dense(subMatrixSize, subMatrixSize, m);
                 halfSpace[j] = (j % 2) == 0 ? 1 * matrix.Determinant() : -1 * matrix.Determinant();
             }
 
