@@ -27,5 +27,20 @@ namespace VolumeIntersection
         public Cell<TVector> Source { get; set; }
 
         public Cell<TVector> Target { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Edge<TVector> edge &&
+                   EqualityComparer<TVector>.Default.Equals(Normal, edge.Normal) &&
+                   C == edge.C;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = 1469261108;
+            hashCode = hashCode * -1521134295 + EqualityComparer<TVector>.Default.GetHashCode(Normal);
+            hashCode = hashCode * -1521134295 + C.GetHashCode();
+            return hashCode;
+        }
     }
 }
