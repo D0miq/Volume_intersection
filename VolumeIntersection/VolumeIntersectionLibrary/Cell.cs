@@ -10,7 +10,11 @@ namespace VolumeIntersection
     {
         public TVector Centroid { get; set; }
 
-        public List<Edge<TVector>> Edges { get; set; } 
+        public List<Edge<TVector>> Edges { get; set; }
+
+        public int VoronoiIndex { get; set; }
+
+        public double Weight { get; set; }
 
         public bool Visited { get; set; }
 
