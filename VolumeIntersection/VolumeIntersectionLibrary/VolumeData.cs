@@ -92,7 +92,7 @@ namespace VolumeIntersection
                     double[][] edgeVertices = new double[edgeIndices.Length][];
                     for (int j = 0; j < edgeVertices.Length; j++)
                     {
-                        edgeVertices[j] = cellVertices[cellIndices[j]];
+                        edgeVertices[j] = cellVertices[edgeIndices[j]];
                     }
 
                     var halfSpace = MathUtils.LinearEquationsDet(edgeVertices);
@@ -265,8 +265,11 @@ namespace VolumeIntersection
             Cell<TVector> cell = dic[generator.Index];
             if (cell == null)
             {
-                // TODO Compute centroid
-                cell = new Cell<TVector>();
+                cell = new Cell<TVector>()
+                {
+                    Centroid = generator
+                };
+
                 dic[generator.Index] = cell;
             }
 
