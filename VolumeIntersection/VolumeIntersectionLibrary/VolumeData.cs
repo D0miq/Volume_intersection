@@ -27,6 +27,21 @@ namespace VolumeIntersection
 
             // Save dimension of the provided vertices
             int vertexDimension = vertices[0].Position.Length;
+            int homogenDimension = vertexDimension + 1;
+
+            double[][] homogenVertices = new double[vertices.Count][];
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                var vertexPosition = vertices[i].Position;
+                homogenVertices[i] = new double[homogenDimension];
+
+                for (int j = 0; j < vertexDimension; j++)
+                {
+                    homogenVertices[i][j] = vertexPosition[j];
+                }
+
+                homogenVertices[i][vertexDimension] = 1;
+            }
 
             var boundingBox = ComputeBoundingBox(vertices, vertexDimension);
             
@@ -42,7 +57,7 @@ namespace VolumeIntersection
                 var cellVertices = new double[cellIndices.Length][];
                 for(int i = 0; i < cellVertices.Length; i++)
                 {
-                    cellVertices[i] = vertices[cellIndices[i]].Position;
+                    cellVertices[i] = homogenVertices[cellIndices[i]];
                 }
 
                 // Compute centroid of the cell
@@ -80,18 +95,7 @@ namespace VolumeIntersection
                         edgeVertices[j] = cellVertices[cellIndices[j]];
                     }
 
-                    double[,] vectors = new double[edgeVertices.Length, vertexDimension + 1];
-                    for(int j = 0; j < edgeVertices.Length; j++)
-                    {
-                        for(int k = 0; k < vertexDimension; k++)
-                        {
-                            vectors[j, k] = edgeVertices[j][k];
-                        }
-
-                        vectors[j, vertexDimension] = 1;
-                    }
-
-                    var halfSpace = MathUtils.LinearEquationsDet(vectors);
+                    var halfSpace = MathUtils.LinearEquationsDet(edgeVertices);
 
                     // Get normal from the standard form
                     double[] normal = new double[vertexDimension];

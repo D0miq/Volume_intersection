@@ -36,7 +36,7 @@ namespace VolumeIntersection
             return m[0, 0] * Det3x3(sub1) - m[0, 1] * Det3x3(sub2) + m[0, 2] * Det3x3(sub3) - m[0, 3] * Det3x3(sub4);
         }
 
-        public static double[] LinearEquationsDet(double[,] vectors)
+        public static double[] LinearEquationsDet(double[][] vectors)
         {
             int dimension = vectors.GetLength(1);
 
@@ -81,7 +81,7 @@ namespace VolumeIntersection
                     {
                         for (int l = 0; l < vectors.Length; l++)
                         {
-                            m[(matrixIndex * vectors.Length) + l] = vectors[l,k];
+                            m[(matrixIndex * vectors.Length) + l] = vectors[l][k];
                         }
 
                         matrixIndex++;

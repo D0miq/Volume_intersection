@@ -88,7 +88,6 @@ namespace VolumeIntersection
             };
         }
 
-
         private static List<Cell<TVector>> FindIntersectingCells<TVector>(Cell<TVector> firstCell, Cell<TVector> secondCell) where TVector : IVector, new()
         {
             var intersections = new List<Cell<TVector>>();
@@ -142,15 +141,15 @@ namespace VolumeIntersection
             return intersections;
         }
 
-        //private static TVector FindCentroid<TVector>(List<Edge<TVector>> edges) where TVector : IVector
-        //{
-        //    double areaSum = 0;
+        private static TVector FindCentroid<TVector>(List<Edge<TVector>> edges) where TVector : IVector
+        {
+            double areaSum = 0;
 
-        //    for(int i = 0; i < edges.Count; i++)
-        //    {
+            for (int i = 0; i < edges.Count; i++)
+            {
 
-        //    }
-        //}
+            }
+        }
 
         private static List<Edge<TVector>> RemoveHalfSpaces<TVector>(Cell<TVector> c1, Cell<TVector> c2) where TVector : IVector, new()
         {
@@ -159,19 +158,39 @@ namespace VolumeIntersection
             halfSpaces.AddRange(c1.Edges);
             halfSpaces.AddRange(c2.Edges);
 
-            for (int i = 0; i < halfSpaces.Count; i++)
-            {
-                for(int j = i + 1; j < halfSpaces.Count; j++)
-                {
-                    for(int k = j + 1; k < halfSpaces.Count; k++)
-                    {
-                        var intersectionPoint = FindIntersectionPoint(halfSpaces[i], halfSpaces[j], halfSpaces[k]);
+            var dimension = c1.Centroid.Position.Length;
 
-                        if(c1.Contains(intersectionPoint) && c2.Contains(intersectionPoint))
+            if(dimension == 2)
+            {
+                for (int i = 0; i < halfSpaces.Count; i++)
+                {
+                    for (int j = i + 1; j < halfSpaces.Count; j++)
+                    {
+                        var intersectionPoint = FindIntersectionPoint(new List<Edge<TVector>>() { halfSpaces[i], halfSpaces[j] });
+
+                        if (c1.Contains(intersectionPoint) && c2.Contains(intersectionPoint))
                         {
                             usedHalfSpaces.Add(halfSpaces[i]);
                             usedHalfSpaces.Add(halfSpaces[j]);
-                            usedHalfSpaces.Add(halfSpaces[k]);
+                        }
+                    }
+                }
+            } else if(dimension == 3)
+            {
+                for (int i = 0; i < halfSpaces.Count; i++)
+                {
+                    for (int j = i + 1; j < halfSpaces.Count; j++)
+                    {
+                        for (int k = j + 1; k < halfSpaces.Count; k++)
+                        {
+                            var intersectionPoint = FindIntersectionPoint(new List<Edge<TVector>>() { halfSpaces[i], halfSpaces[j], halfSpaces[k] });
+
+                            if (c1.Contains(intersectionPoint) && c2.Contains(intersectionPoint))
+                            {
+                                usedHalfSpaces.Add(halfSpaces[i]);
+                                usedHalfSpaces.Add(halfSpaces[j]);
+                                usedHalfSpaces.Add(halfSpaces[k]);
+                            }
                         }
                     }
                 }
@@ -180,18 +199,32 @@ namespace VolumeIntersection
             return usedHalfSpaces.ToList();
         }
 
-        private static TVector FindIntersectionPoint<TVector>(Edge<TVector> e1, Edge<TVector> e2, Edge<TVector> e3) where TVector : IVector, new()
+        private static TVector FindIntersectionPoint<TVector>(List<Edge<TVector>> edges) where TVector : IVector, new()
         {
-            var e1Normal = e1.Normal.Position;
-            var e2Normal = e2.Normal.Position;
-            var e3Normal = e3.Normal.Position;
+            int normalDimension = edges[0].Normal.Position.Length;
 
-            double[,] sub1 = { { e1Normal[1], e1Normal[2], e1.C }, { e2Normal[1], e2Normal[2], e2.C }, { e3Normal[1], e3Normal[2], e3.C } };
-            double[,] sub2 = { { e1Normal[0], e1Normal[2], e1.C }, { e2Normal[0], e2Normal[2], e2.C }, { e3Normal[0], e3Normal[2], e3.C } };
-            double[,] sub3 = { { e1Normal[0], e1Normal[1], e1.C }, { e2Normal[0], e2Normal[1], e2.C }, { e3Normal[0], e3Normal[1], e3.C } };
-            double[,] sub4 = { { e1Normal[0], e1Normal[1], e1Normal[2] }, { e2Normal[0], e2Normal[1], e2Normal[2] }, { e3Normal[0], e3Normal[1], e3Normal[2] } };
+            double[][] vectors = new double[edges.Count][];
 
-            double[] position = { MathUtils.Det3x3(sub1), -MathUtils.Det3x3(sub2), MathUtils.Det3x3(sub3), -MathUtils.Det3x3(sub4) };
+            for(int i = 0; i < edges.Count; i++)
+            {
+                vectors[i] = new double[normalDimension + 1];
+                var normal = edges[i].Normal.Position;
+
+                for(int j = 0; j < normalDimension; j++)
+                {
+                    vectors[i][j] = normal[j];
+                }
+
+                vectors[i][normalDimension] = edges[i].C;
+            }
+
+            double[] x = MathUtils.LinearEquationsDet(vectors);
+
+            double[] position = new double[normalDimension];
+            for(int i = 0; i < position.Length; i++)
+            {
+                position[i] = x[i] / x[normalDimension];
+            }
 
             return new TVector() { Position = position };
         }
