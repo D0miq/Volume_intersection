@@ -8,6 +8,26 @@ namespace TestVolumeIntersection
     [TestClass]
     public class VolumeDataTest
     {
+        private List<Vertex> vertices;
+        private List<Tetrahedron> triangles;
+
+        [TestInitialize]
+        public void Initialize()
+        {
+            vertices = new List<Vertex>()
+            {
+                new Vertex(0, 0),
+                new Vertex(1, 0),
+                new Vertex(0, 1)
+            };
+
+            triangles = new List<Tetrahedron>()
+            {
+                new Tetrahedron(0, 1, 2)
+            };
+        }
+
+
         [TestMethod]
         public void TestFromVoronoi()
         {
@@ -26,21 +46,33 @@ namespace TestVolumeIntersection
         }
 
         [TestMethod]
-        public void TestFromTriangulationSingleTriangle()
+        public void TestFromTriangulationSingleTriangleBoundingBoxMin()
         {
-            var vertices = new List<Vertex>()
-            {
-                new Vertex(0, 0),
-                new Vertex(1, 0),
-                new Vertex(0, 1)
-            };
+            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, triangles);
+            var boundingBoxMin = volumeData.BoundingBox.Min.Position;
 
-            var tetrahedra = new List<Tetrahedron>()
-            {
-                new Tetrahedron(0, 1, 2)
-            };
+            Assert.AreEqual(boundingBoxMin[0], 0);
+            Assert.AreEqual(boundingBoxMin[1], 0);
+        }
 
-            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, tetrahedra);
+        [TestMethod]
+        public void TestFromTriangulationSingleTriangleBoundingBoxMax()
+        {
+            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, triangles);
+            var boundingBoxMax = volumeData.BoundingBox.Max.Position;
+
+            Assert.AreEqual(boundingBoxMax[0], 1);
+            Assert.AreEqual(boundingBoxMax[1], 1);
+        }
+
+        [TestMethod]
+        public void TestFromTriangulationSingleTriangleCellCentroid()
+        {
+            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, triangles);
+            var centroid = volumeData.Cells[0].Centroid.Position;
+
+            Assert.AreEqual(centroid[0], 1.0/3.0);
+            Assert.AreEqual(centroid[1], 1.0/3.0);
         }
 
         [TestMethod]
