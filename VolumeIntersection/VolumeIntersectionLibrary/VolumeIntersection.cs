@@ -35,6 +35,19 @@ namespace VolumeIntersection
             }
         }
 
+        //private void GiveCentroid<TVector>(int dimension, List<Edge<TVector>> edges, out double[] centroid, out double area) where TVector : IVector
+        //{
+        //    if(dimension == 1)
+        //    {
+        //        area = 0;
+        //        for(int i = 0; i < edges.Count; i++)
+        //        {
+        //            area += edges[i].C / MathUtils.Length(edges[i].Normal.Position);
+        //        }
+        //    }
+        //}
+
+
         /// <summary>
         /// Finds intersection between triangulation (tetrahedralization) and voronoi diagram.
         /// Method starts traversing from a random triangle (tetrahedron) and checks for different components of a triangulation (tetrahedralization).
@@ -96,7 +109,7 @@ namespace VolumeIntersection
                 firstIndex = volumeData1.Cells.FindIndex(cell => cell.Contains(start));
                 secondIndex = volumeData2.Cells.FindIndex(cell => cell.Contains(start));
             } while (firstIndex == -1 || secondIndex == -1);
-            
+
             var intersections = FindIntersectingCells(volumeData1.Cells[firstIndex], volumeData2.Cells[secondIndex]);
 
             return new VolumeData<TVector>()
@@ -122,7 +135,8 @@ namespace VolumeIntersection
                 firstCell.Visited = true;
                 secondCell.Visited = true;
 
-                var edges = RemoveHalfSpaces(firstCell, secondCell);
+                List<TVector> intersectingPoints;
+                var edges = RemoveHalfSpaces(firstCell, secondCell, out intersectingPoints);
 
                 foreach (var edge in edges)
                 {
@@ -144,7 +158,7 @@ namespace VolumeIntersection
                 var cell = new Cell<TVector>()
                 {
                     Edges = edges,
-                    Centroid = FindCentroid(edges)
+                    Centroid = FindCentroid(intersectingPoints)
                 };
 
                 intersections.Add(cell);
@@ -158,49 +172,15 @@ namespace VolumeIntersection
             return intersections;
         }
 
-        private static TVector FindCentroid<TVector>(List<Edge<TVector>> edges) where TVector : IVector, new()
+        private static TVector FindCentroid<TVector>(List<TVector> vertices) where TVector : IVector, new()
         {
-            var dimension = edges[0].Normal.Position.Length;
-
-            var vertices = new List<double[]>();
-
-            if (dimension == 2)
-            {
-                for (int i = 0; i < edges.Count; i++)
-                {
-                    for (int j = i + 1; j < edges.Count; j++)
-                    {
-                        var success = FindIntersectionPoint(new List<Edge<TVector>>() { edges[i], edges[j] }, out TVector point);
-                        if(success)
-                        {
-                            vertices.Add(point.Position);
-                        }    
-                    }
-                }
-            } else if (dimension == 3)
-            {
-                for (int i = 0; i < edges.Count; i++)
-                {
-                    for (int j = i + 1; j < edges.Count; j++)
-                    {
-                        for(int k = j + 1; k < edges.Count; k++)
-                        {
-                            var success = FindIntersectionPoint(new List<Edge<TVector>>() { edges[i], edges[j], edges[k] }, out TVector point);
-
-                            if(success)
-                            {
-                                vertices.Add(point.Position);
-                            }
-                        }
-                    }
-                }
-            }
+            int dimension = vertices[0].Position.Length;
 
             double areaSum = 0;
 
             double[] centroid = new double[dimension];
             var triangulation = Triangulation.CreateDelaunay(vertices);
-            foreach(var triangle in triangulation.Cells)
+            foreach (var triangle in triangulation.Cells)
             {
                 double area = 0;
 
@@ -223,7 +203,7 @@ namespace VolumeIntersection
                 {
                     area = Math.Abs(matrix.Determinant()) / 2;
                 }
-                else if(dimension == 3)
+                else if (dimension == 3)
                 {
                     area = Math.Abs(matrix.Determinant()) / 6;
                 }
@@ -255,16 +235,18 @@ namespace VolumeIntersection
             };
         }
 
-        private static List<Edge<TVector>> RemoveHalfSpaces<TVector>(Cell<TVector> c1, Cell<TVector> c2) where TVector : IVector, new()
+        private static List<Edge<TVector>> RemoveHalfSpaces<TVector>(Cell<TVector> c1, Cell<TVector> c2, out List<TVector> intersectionPoints) where TVector : IVector, new()
         {
             var usedHalfSpaces = new HashSet<Edge<TVector>>();
+            var usedIntersectingPoints = new HashSet<TVector>(new VectorComparer<TVector>());
+
             var halfSpaces = new List<Edge<TVector>>(c1.Edges.Count + c2.Edges.Count);
             halfSpaces.AddRange(c1.Edges);
             halfSpaces.AddRange(c2.Edges);
 
             var dimension = c1.Centroid.Position.Length;
 
-            if(dimension == 2)
+            if (dimension == 2)
             {
                 for (int i = 0; i < halfSpaces.Count; i++)
                 {
@@ -279,7 +261,8 @@ namespace VolumeIntersection
                         }
                     }
                 }
-            } else if(dimension == 3)
+            }
+            else if (dimension == 3)
             {
                 for (int i = 0; i < halfSpaces.Count; i++)
                 {
@@ -294,12 +277,14 @@ namespace VolumeIntersection
                                 usedHalfSpaces.Add(halfSpaces[i]);
                                 usedHalfSpaces.Add(halfSpaces[j]);
                                 usedHalfSpaces.Add(halfSpaces[k]);
+                                usedIntersectingPoints.Add(intersectionPoint);
                             }
                         }
                     }
                 }
             }
 
+            intersectionPoints = usedIntersectingPoints.ToList();
             return usedHalfSpaces.ToList();
         }
 
@@ -309,12 +294,12 @@ namespace VolumeIntersection
 
             double[][] vectors = new double[edges.Count][];
 
-            for(int i = 0; i < edges.Count; i++)
+            for (int i = 0; i < edges.Count; i++)
             {
                 vectors[i] = new double[normalDimension + 1];
                 var normal = edges[i].Normal.Position;
 
-                for(int j = 0; j < normalDimension; j++)
+                for (int j = 0; j < normalDimension; j++)
                 {
                     vectors[i][j] = normal[j];
                 }
@@ -325,7 +310,7 @@ namespace VolumeIntersection
             double[] x = MathUtils.LinearEquationsDet(vectors);
 
             double[] position = new double[normalDimension];
-            for(int i = 0; i < position.Length; i++)
+            for (int i = 0; i < position.Length; i++)
             {
                 position[i] = x[i] / x[normalDimension];
             }

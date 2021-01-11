@@ -96,6 +96,12 @@ namespace VolumeIntersection
             return halfSpace;
         }
 
+
+        public static double Length(double[] v)
+        {
+            return Math.Sqrt(LengthSquared(v));
+        }
+
         public static double LengthSquared(double[] v)
         {
             double norm = 0;
