@@ -1,41 +1,23 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VolumeIntersection
 {
-    static class MathUtils
+    /// <summary>
+    /// Math operations.
+    /// </summary>
+    internal static class MathUtils
     {
-        public const double Eps = 0.0000001f;
+        /// <summary>
+        /// Eps used for eps tests.
+        /// </summary>
+        public const double Eps = 1E-10;
 
-        public static double Det3x3(double[,] m)
-        {
-            if (m.GetLength(0) != 3 || m.GetLength(1) != 3)
-            {
-                throw new ArgumentException("Both dimensions must be 3 values long.");
-            }
-
-            return m[0, 0] * ((m[1, 1] * m[2, 2]) - (m[2, 1] * m[1, 2])) - m[0, 1] * (m[1, 0] * m[2, 2] - m[2, 0] * m[1, 2]) + m[0, 2] * (m[1, 0] * m[2, 1] - m[2, 0] * m[1, 1]);
-        }
-
-        public static double Det4x4(double[,] m)
-        {
-            if (m.GetLength(0) != 4 || m.GetLength(1) != 4)
-            {
-                throw new ArgumentException("Both dimensions must be 4 values long.");
-            }
-
-            double[,] sub1 = { { m[1, 1], m[1, 2], m[1, 3] }, { m[2, 1], m[2, 2], m[2, 3] }, { m[3, 1], m[3, 2], m[3, 3] } };
-            double[,] sub2 = { { m[1, 0], m[1, 2], m[1, 3] }, { m[2, 0], m[2, 2], m[2, 3] }, { m[3, 0], m[3, 2], m[3, 3] } };
-            double[,] sub3 = { { m[1, 0], m[1, 1], m[1, 3] }, { m[2, 0], m[2, 1], m[2, 3] }, { m[3, 0], m[3, 1], m[3, 3] } };
-            double[,] sub4 = { { m[1, 0], m[1, 1], m[1, 2] }, { m[2, 0], m[2, 1], m[2, 2] }, { m[3, 0], m[3, 1], m[3, 2] } };
-
-            return m[0, 0] * Det3x3(sub1) - m[0, 1] * Det3x3(sub2) + m[0, 2] * Det3x3(sub3) - m[0, 3] * Det3x3(sub4);
-        }
-
+        /// <summary>
+        /// Computes linear equation with determinants.
+        /// </summary>
+        /// <param name="vectors">Matrix.</param>
+        /// <returns>Result.</returns>
         public static double[] LinearEquationsDet(double[][] vectors)
         {
             int dimension = vectors[0].Length;
@@ -96,24 +78,12 @@ namespace VolumeIntersection
             return halfSpace;
         }
 
-
-        public static double Length(double[] v)
-        {
-            return Math.Sqrt(LengthSquared(v));
-        }
-
-        public static double LengthSquared(double[] v)
-        {
-            double norm = 0;
-            for (int i = 0; i < v.Length; i++)
-            {
-                var t = v[i];
-                norm += t * t;
-            }
-
-            return norm;
-        }
-
+        /// <summary>
+        /// Computes a dot product of two vectors.
+        /// </summary>
+        /// <param name="v1">First vector.</param>
+        /// <param name="v2">Second vector.</param>
+        /// <returns>The dot product.</returns>
         public static double Dot(double[] v1, double[] v2)
         {
             if(v1.Length != v2.Length)
@@ -130,16 +100,15 @@ namespace VolumeIntersection
             return dot;
         }
 
-        public static double[] CrossProduct(double[] v1, double[] v2)
-        {
-            return new double[] { v1[1] * v2[2] - v1[2] * v2[1], -(v1[0] * v2[2] - v1[2] * v2[0]), v1[0] * v2[1] - v1[1] * v2[0] };
-        }
-
-        public static double DistancePointPlane(double[] n, double d, double[] v)
-        {
-            return Dot(n, v) - d;
-        }
-
+        /// <summary>
+        /// Remaps value from one interval to another.
+        /// </summary>
+        /// <param name="value">Value that should be remapped.</param>
+        /// <param name="low1">Low limit of the first interval.</param>
+        /// <param name="high1">High limit of the first interval.</param>
+        /// <param name="low2">Low limit of the second interval.</param>
+        /// <param name="high2">High limit of the second interval.</param>
+        /// <returns>Remapped value.</returns>
         public static double Remap(double value, double low1, double high1, double low2, double high2)
         {
             return low2 + (value - low1) * (high2 - low2) / (high1 - low1);
