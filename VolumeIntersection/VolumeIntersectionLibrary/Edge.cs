@@ -3,7 +3,7 @@
 namespace VolumeIntersection
 {
     /// <summary>
-    /// Face describes a half space that separates two cells. 
+    /// Edge describes a half space that separates two cells. 
     /// The normal has to point inside the source cell.
     /// 
     /// For 2D it would represent a line in the standard (implicit) form.
@@ -14,20 +14,34 @@ namespace VolumeIntersection
     /// 
     /// The same goes for higher dimension.
     /// </summary>
-    /// <typeparam name="TVector"></typeparam>
+    /// <typeparam name="TVector">Vector type</typeparam>
     public class Edge<TVector> where TVector : IVector
     {
+        /// <summary>
+        /// Normal of this half space.
+        /// </summary>
         public TVector Normal { get; set; }
 
         /// <summary>
-        /// Right side of the standard form of a half space.
+        /// Right side of the standard form of this half space.
         /// </summary>
         public double C { get; set; }
 
+        /// <summary>
+        /// Source cell of this half space.
+        /// </summary>
         public Cell<TVector> Source { get; set; }
 
+        /// <summary>
+        /// Target cell of this half space.
+        /// </summary>
         public Cell<TVector> Target { get; set; }
 
+        /// <summary>
+        /// Compares this edge with another object.
+        /// </summary>
+        /// <param name="obj">Another object.</param>
+        /// <returns>True - objects are equals, false otherwise.</returns>
         public override bool Equals(object obj)
         {
             return obj is Edge<TVector> edge &&
@@ -35,6 +49,10 @@ namespace VolumeIntersection
                    C == edge.C;
         }
 
+        /// <summary>
+        /// Computes a hash code of this edge.
+        /// </summary>
+        /// <returns>The hash code</returns>
         public override int GetHashCode()
         {
             int hashCode = 1469261108;

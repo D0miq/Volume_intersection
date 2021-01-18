@@ -1,11 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace VolumeIntersection
 {
-    class EdgeComparer : IEqualityComparer<int[]>
+    /// <summary>
+    /// Compares two edges defined as an array of integers.
+    /// </summary>
+    internal class EdgeComparer : IEqualityComparer<int[]>
     {
+        /// <summary>
+        /// Compares two edges.
+        /// </summary>
+        /// <param name="x">The first edge</param>
+        /// <param name="y">The second edge</param>
+        /// <returns>True - edges contains same indices, false otherwise.</returns>
         public bool Equals(int[] x, int[] y)
         {
             if (x == null && y == null)
@@ -33,6 +41,11 @@ namespace VolumeIntersection
             return true;
         }
 
+        /// <summary>
+        /// Computes a hash code of an edge.
+        /// </summary>
+        /// <param name="obj">The edge.</param>
+        /// <returns>The hash code.</returns>
         public int GetHashCode(int[] obj)
         {
             if (obj == null) throw new ArgumentNullException("Object cannot be null.");

@@ -1,12 +1,10 @@
 ﻿using MIConvexHull;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VolumeIntersection
 {
+    /// <summary>
+    /// Interface of a vector.
+    /// </summary>
     public interface IVector : IVertex
     {
         /// <summary>
@@ -14,6 +12,10 @@ namespace VolumeIntersection
         /// </summary>
         new double[] Position { get; set; }
 
+        /// <summary>
+        /// Gets index of this vector.
+        /// Should be used when the vector is used to compute a volumetric data from voronoi generators.
+        /// </summary>
         int Index { get; }
     }
 }

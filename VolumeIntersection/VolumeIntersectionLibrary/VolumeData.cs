@@ -1,18 +1,33 @@
-﻿using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearAlgebra.Double;
-using MIConvexHull;
+﻿using MIConvexHull;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace VolumeIntersection
 {
+    /// <summary>
+    /// Volumetric data.
+    /// </summary>
+    /// <typeparam name="TVector">Vector type</typeparam>
     public class VolumeData<TVector> where TVector : IVector, new()
     {
+        /// <summary>
+        /// Bounding box.
+        /// </summary>
         public BoundingBox<TVector> BoundingBox { get; set; }
 
+        /// <summary>
+        /// Cells of this data.
+        /// </summary>
         public List<Cell<TVector>> Cells { get; set; }
 
+        /// <summary>
+        /// Creates a volumetric data from a triangulation.
+        /// </summary>
+        /// <typeparam name="TCell"></typeparam>
+        /// <param name="vertices">Vertices</param>
+        /// <param name="cells">Cells (triangles or tetrahedrons)</param>
+        /// <returns>Volumetric data</returns>
         public static VolumeData<TVector> FromTriangulation<TCell>(List<TVector> vertices, List<TCell> cells) where TCell : ITriangleCell
         {
             if (vertices.Count < 3)
@@ -42,8 +57,6 @@ namespace VolumeIntersection
 
                 homogenVertices[i][vertexDimension] = 1;
             }
-
-            var boundingBox = ComputeBoundingBox(vertices, vertexDimension);
             
             var edgeDictionary = new Dictionary<int[], Edge<TVector>>(new EdgeComparer());
             var volumeCells = new List<Cell<TVector>>();
@@ -75,7 +88,8 @@ namespace VolumeIntersection
                 // Create tetrahedron cell
                 var volumeCell = new Cell<TVector>()
                 {
-                    Centroid = new TVector() { Position = centroid }
+                    Centroid = new TVector() { Position = centroid },
+                    VoronoiIndex = -1
                 };
 
                 // Iterate over all faces of a cell and add them to volumetric data
@@ -85,14 +99,14 @@ namespace VolumeIntersection
                     int[] edgeIndices = new int[cellVertices.Length - 1];
                     for (int j = 0; j < edgeIndices.Length; j++)
                     {
-                        edgeIndices[j] = cellIndices[(i + j) % cellVertices.Length];
+                        edgeIndices[j] = cellIndices[(i + j) % cellIndices.Length];
                     }
 
                     // Get vertices of the face
                     double[][] edgeVertices = new double[edgeIndices.Length][];
                     for (int j = 0; j < edgeVertices.Length; j++)
                     {
-                        edgeVertices[j] = cellVertices[edgeIndices[j]];
+                        edgeVertices[j] = homogenVertices[edgeIndices[j]];
                     }
 
                     var halfSpace = MathUtils.LinearEquationsDet(edgeVertices);
@@ -156,7 +170,6 @@ namespace VolumeIntersection
 
             return new VolumeData<TVector>()
             {
-                BoundingBox = boundingBox,
                 Cells = volumeCells
             };
             
@@ -171,8 +184,6 @@ namespace VolumeIntersection
 
             // Save dimension of the provided generators
             int dimension = generators[0].Position.Length;
-
-            var boundingBox = ComputeBoundingBox(generators, dimension);
 
             // Create voronoi diagram from the generators.
             var voronoiMesh = VoronoiMesh.Create(generators);
@@ -190,7 +201,7 @@ namespace VolumeIntersection
                 {
                     // Create a voronoi cell for the generator or find it if the generator has already been visited.
                     Cell<TVector> sourceCell = AddCellToDictionary(tetrahedron.Vertices[i], cellDictionary);
-                    
+
                     // From the comments above follows that vertices of the tetrahedron and their corresponding voronoi cells are each other's neighbors.
                     // So iterate over neighbors of the current source cell.
                     for (int j = i + 1; j < tetrahedron.Vertices.Length; j++)
@@ -255,7 +266,6 @@ namespace VolumeIntersection
 
             return new VolumeData<TVector>()
             {
-                BoundingBox = boundingBox,
                 Cells = cellDictionary.ToList()
             };
         }
@@ -267,7 +277,8 @@ namespace VolumeIntersection
             {
                 cell = new Cell<TVector>()
                 {
-                    Centroid = generator
+                    Centroid = generator,
+                    VoronoiIndex = generator.Index
                 };
 
                 dic[generator.Index] = cell;
@@ -276,44 +287,25 @@ namespace VolumeIntersection
             return cell;
         }
 
-        private static BoundingBox<TVector> ComputeBoundingBox(List<TVector> vertices, int vertexDimension)
+        private static int GetDimension(List<TVector> vertices)
         {
-            double[] min = new double[vertexDimension];
-            for (int i = 0; i < min.Length; i++)
+            int minDimension = int.MaxValue;
+            int maxDimension = int.MinValue;
+
+            Random random = new Random();
+            for(int i = 0; i < 10; i++)
             {
-                min[i] = double.MaxValue;
+                int index = random.Next(vertices.Count);
+                int dimension = vertices[index].Position.Length;
+
+                if (minDimension > dimension) minDimension = dimension;
+                if (maxDimension < dimension) maxDimension = dimension;
             }
 
-            double[] max = new double[vertexDimension];
-            for (int i = 0; i < min.Length; i++)
-            {
-                max[i] = double.MinValue;
-            }
+            if (minDimension != maxDimension)
+                throw new InvalidOperationException("Vertices contains different dimensions");
 
-            for (int i = 0; i < vertices.Count; i++)
-            {
-                var position = vertices[i].Position;
-
-                for (int j = 0; j < position.Length; j++)
-                {
-                    if (min[j] > position[j])
-                    {
-                        min[j] = position[j];
-                    }
-
-                    if (max[j] < position[j])
-                    {
-                        max[j] = position[j];
-                    }
-                }
-            }
-
-            return new BoundingBox<TVector>()
-            {
-                Min = new TVector() { Position = min },
-                Max = new TVector() { Position = max }
-            };
-
+            return minDimension;
         }
     }
 }
