@@ -115,28 +115,6 @@ namespace TestVolumeIntersection
         }
 
         [TestMethod]
-        public void TestIntersectBigData()
-        {
-            var reader = new TetrahedralizationReader();
-            var tetrahedralization = reader.Read("bigdata.dat");
-
-            Random rd = new Random();
-            var generators = new List<Vertex>();
-
-            for (int i = 0; i < 1000; i++)
-            {
-                generators.Add(new Vertex(rd.NextDouble() * 45 - 25, rd.NextDouble() * 40 - 20, rd.NextDouble() * 40 - 20) { Index = i });
-            }
-
-            var volumeData = VolumeIntersection.VolumeIntersection<Vertex>.Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
-
-            //var bitmap = new System.Drawing.Bitmap(600, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.1f, volumeData);
-            //bitmap.Save("bitmap.png");
-        }
-
-
-        [TestMethod]
         public void TestIntersectionExampleData()
         {
             var parser = new Parser();
