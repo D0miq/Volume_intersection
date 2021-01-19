@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace VolumeIntersection
+namespace VolumeIntersection.SliceVisualisation
 {
     /// <summary>
     /// Bounding box.
