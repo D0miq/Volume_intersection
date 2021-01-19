@@ -19,6 +19,11 @@ namespace VolumeIntersection
         public List<Edge<TVector>> Edges { get; set; }
 
         /// <summary>
+        /// What triangle cell was a parent of this cell?
+        /// </summary>
+        public int TriangleIndex { get; set; }
+
+        /// <summary>
         /// What voronoi cell was a parent of this cell?
         /// </summary>
         public int VoronoiIndex { get; set; }
@@ -31,7 +36,7 @@ namespace VolumeIntersection
         /// <summary>
         /// Was this cell visited during calculations? 
         /// </summary>
-        public bool Visited { get; set; }
+        internal bool Visited { get; set; }
 
         /// <summary>
         /// Creates a new cell

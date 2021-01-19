@@ -56,8 +56,10 @@ namespace VolumeIntersection
             var edgeDictionary = new Dictionary<int[], Edge<TVector>>(new EdgeComparer());
             var volumeCells = new List<Cell<TVector>>();
 
-            foreach (var cell in cells)
+            for (var cellIndex = 0; cellIndex < cells.Count; cellIndex++)
             {
+                var cell = cells[cellIndex];
+
                 // Save indices of the cell
                 var cellIndices = cell.Indices;
 
@@ -84,7 +86,8 @@ namespace VolumeIntersection
                 var volumeCell = new Cell<TVector>()
                 {
                     Centroid = new TVector() { Position = centroid },
-                    VoronoiIndex = -1
+                    VoronoiIndex = -1,
+                    TriangleIndex = cellIndex
                 };
 
                 // Iterate over all faces of a cell and add them to volumetric data
@@ -273,7 +276,8 @@ namespace VolumeIntersection
                 cell = new Cell<TVector>()
                 {
                     Centroid = generator,
-                    VoronoiIndex = generator.Index
+                    VoronoiIndex = generator.Index,
+                    TriangleIndex = -1
                 };
 
                 dic[generator.Index] = cell;
