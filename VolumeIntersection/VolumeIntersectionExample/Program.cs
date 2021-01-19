@@ -29,11 +29,6 @@ namespace VolumeIntersectionExample
                 }
             }
 
-            var voronoiData = VolumeData<Vertex>.FromVoronoi(generators);
-            var bitmap = new System.Drawing.Bitmap(800, 800);
-            VolumeSlicer.Slice(bitmap, 2, 0.4, voronoiData);
-            bitmap.Save("export000.png");
-
             var reader = new TetrahedralizationReader();
             var tetrahedralization = reader.Read("example.dat");
 
@@ -47,18 +42,26 @@ namespace VolumeIntersectionExample
                 }
             }
 
-            var tetrahedralizationData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
-            bitmap = new System.Drawing.Bitmap(800, 800);
-            VolumeSlicer.Slice(bitmap, 2, 0.4, tetrahedralizationData);
-            bitmap.Save("example.png");
+            //var boundingBox = new BoundingBox<Vertex>(tetrahedralization.Vertices, 3);
+
+            //var voronoiData = VolumeData<Vertex>.FromVoronoi(generators);
+            //voronoiData.BoundingBox = boundingBox;
+
+            //var bitmap = new System.Drawing.Bitmap(800, 800);
+            //VolumeSlicer.Slice(bitmap, 2, 0.4, voronoiData);
+            //bitmap.Save("export000.png");
+
+            //bitmap = new System.Drawing.Bitmap(800, 800);
+            //VolumeSlicer.Slice(bitmap, 2, 0.4, tetrahedralizationData);
+            //bitmap.Save("example.png");
 
             var volumeData = VolumeIntersection<Vertex>.Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
 
-            volumeData.BoundingBox = tetrahedralizationData.BoundingBox;
+            //volumeData.BoundingBox = tetrahedralizationData.BoundingBox;
 
-            bitmap = new System.Drawing.Bitmap(800, 800);
-            VolumeSlicer.Slice(bitmap, 2, 0.4, volumeData);
-            bitmap.Save("intersectExample.png");
+            //bitmap = new System.Drawing.Bitmap(800, 800);
+            //VolumeSlicer.Slice(bitmap, 2, 0.4, volumeData);
+            //bitmap.Save("intersectExample.png");
         }
     }
 }
