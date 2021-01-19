@@ -52,12 +52,11 @@ namespace TestVolumeIntersection
 
             var volumeData = new VolumeData<Vertex>()
             {
-                BoundingBox = boundingBox,
                 Cells = new List<Cell<Vertex>>() { cell }
             };
 
             var bitmap = new System.Drawing.Bitmap(600, 800);
-            VolumeSlicer.Slice(bitmap, 2, 0.1f, volumeData);
+            VolumeSlicer.Slice(bitmap, 2, 0.1f, volumeData, boundingBox);
             bitmap.Save("bitmap.png");
         }
 
@@ -73,14 +72,14 @@ namespace TestVolumeIntersection
             }
 
             var volumeData = VolumeData<Vertex>.FromVoronoi(generators);
-            volumeData.BoundingBox = new BoundingBox<Vertex>()
+            var boundingBox = new BoundingBox<Vertex>()
             {
                 Max = new Vertex(1, 1, 1),
                 Min = new Vertex(-1, -1, -1)
             };
 
             var bitmap = new System.Drawing.Bitmap(800, 800);
-            VolumeSlicer.Slice(bitmap, 2, 0, volumeData);
+            VolumeSlicer.Slice(bitmap, 2, 0, volumeData, boundingBox);
             bitmap.Save("RandomVoronoi.png");
         }
 
@@ -111,14 +110,14 @@ namespace TestVolumeIntersection
                 if (zMax < vertex[2]) zMax = vertex[2];
             }
 
-            volumeData.BoundingBox = new BoundingBox<Vertex>()
+            var boundingBox = new BoundingBox<Vertex>()
             {
                 Min = new Vertex(xMin, yMin, zMin),
                 Max = new Vertex(xMax, yMax, zMax)
             };
 
             var bitmap = new System.Drawing.Bitmap(800, 600);
-            VolumeSlicer.Slice(bitmap, 2, 0.6f, volumeData);
+            VolumeSlicer.Slice(bitmap, 2, 0.6f, volumeData, boundingBox);
             bitmap.Save("bigdata.png");
         }
     }

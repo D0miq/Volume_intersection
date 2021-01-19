@@ -28,7 +28,7 @@ namespace VolumeIntersection.SliceVisualisation
         /// <param name="axis">Slicing axis.</param>
         /// <param name="value">Slicing value.</param>
         /// <param name="volume">3D Volumetric data.</param>
-        public static void Slice<TVector>(Bitmap bitmap, int axis, double value, VolumeData<TVector> volume)
+        public static void Slice<TVector>(Bitmap bitmap, int axis, double value, VolumeData<TVector> volume, BoundingBox<TVector> boundingBox)
             where TVector : IVector, new()
         {
             // Setup color of each cell
@@ -57,8 +57,8 @@ namespace VolumeIntersection.SliceVisualisation
                 // Setup axis and bounds
                 int nextAxis = (axis + 1) % Dimension;
                 int previousAxis = (axis - 1) % Dimension;
-                var minBound = volume.BoundingBox.Min.Position;
-                var maxBound = volume.BoundingBox.Max.Position;
+                var minBound = boundingBox.Min.Position;
+                var maxBound = boundingBox.Max.Position;
 
                 // For each pixel of a bitmap find a cell and color the pixel.
                 for (int i = 0; i < height; i++)

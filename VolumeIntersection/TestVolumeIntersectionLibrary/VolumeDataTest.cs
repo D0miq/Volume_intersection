@@ -27,7 +27,6 @@ namespace TestVolumeIntersection
             };
         }
 
-
         [TestMethod]
         public void TestFromVoronoi()
         {
@@ -43,26 +42,6 @@ namespace TestVolumeIntersection
             };
 
             var volumeData = VolumeData<Vertex>.FromVoronoi(generators);
-        }
-
-        [TestMethod]
-        public void TestFromTriangulationSingleTriangleBoundingBoxMin()
-        {
-            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, triangles);
-            var boundingBoxMin = volumeData.BoundingBox.Min.Position;
-
-            Assert.AreEqual(boundingBoxMin[0], 0);
-            Assert.AreEqual(boundingBoxMin[1], 0);
-        }
-
-        [TestMethod]
-        public void TestFromTriangulationSingleTriangleBoundingBoxMax()
-        {
-            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, triangles);
-            var boundingBoxMax = volumeData.BoundingBox.Max.Position;
-
-            Assert.AreEqual(boundingBoxMax[0], 1);
-            Assert.AreEqual(boundingBoxMax[1], 1);
         }
 
         [TestMethod]

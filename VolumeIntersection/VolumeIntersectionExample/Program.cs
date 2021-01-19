@@ -45,22 +45,19 @@ namespace VolumeIntersectionExample
             //var boundingBox = new BoundingBox<Vertex>(tetrahedralization.Vertices, 3);
 
             //var voronoiData = VolumeData<Vertex>.FromVoronoi(generators);
-            //voronoiData.BoundingBox = boundingBox;
 
             //var bitmap = new System.Drawing.Bitmap(800, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.4, voronoiData);
+            //VolumeSlicer.Slice(bitmap, 2, 0.4, voronoiData, boundingBox);
             //bitmap.Save("export000.png");
 
             //bitmap = new System.Drawing.Bitmap(800, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.4, tetrahedralizationData);
+            //VolumeSlicer.Slice(bitmap, 2, 0.4, tetrahedralizationData, boundingBox);
             //bitmap.Save("example.png");
 
             var volumeData = VolumeIntersection<Vertex>.Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
 
-            //volumeData.BoundingBox = tetrahedralizationData.BoundingBox;
-
             //bitmap = new System.Drawing.Bitmap(800, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.4, volumeData);
+            //VolumeSlicer.Slice(bitmap, 2, 0.4, volumeData, boundingBox);
             //bitmap.Save("intersectExample.png");
         }
     }

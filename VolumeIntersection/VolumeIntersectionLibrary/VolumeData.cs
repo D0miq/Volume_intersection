@@ -12,11 +12,6 @@ namespace VolumeIntersection
     public class VolumeData<TVector> where TVector : IVector, new()
     {
         /// <summary>
-        /// Bounding box.
-        /// </summary>
-        public BoundingBox<TVector> BoundingBox { get; set; }
-
-        /// <summary>
         /// Cells of this data.
         /// </summary>
         public List<Cell<TVector>> Cells { get; set; }

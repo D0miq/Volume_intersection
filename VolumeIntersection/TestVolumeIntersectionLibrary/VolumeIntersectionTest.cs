@@ -43,10 +43,10 @@ namespace TestVolumeIntersection
             var reader = new TetrahedralizationReader();
             var tetrahedralization = reader.Read("smalldata.dat");
 
-            var tetrahedralizationData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
-            var bitmap = new System.Drawing.Bitmap(800, 800);
-            VolumeSlicer.Slice(bitmap, 2, 0.4, tetrahedralizationData);
-            bitmap.Save("smalldata.png");
+            //var tetrahedralizationData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
+            //var bitmap = new System.Drawing.Bitmap(800, 800);
+            //VolumeSlicer.Slice(bitmap, 2, 0.4, tetrahedralizationData);
+            //bitmap.Save("smalldata.png");
 
             Random rd = new Random();
             var generators = new List<Vertex>();
@@ -56,19 +56,19 @@ namespace TestVolumeIntersection
                 generators.Add(new Vertex(rd.NextDouble() * 0.6 + 0.1, rd.NextDouble() * 0.9, rd.NextDouble() * 0.7 + 0.2) { Index = i });
             }
 
-            var voronoiData = VolumeData<Vertex>.FromVoronoi(generators);
-            voronoiData.BoundingBox = tetrahedralizationData.BoundingBox;
-            bitmap = new System.Drawing.Bitmap(800, 800);
-            VolumeSlicer.Slice(bitmap, 2, 0.4, voronoiData);
-            bitmap.Save("voronoiSmallData.png");
+            //var voronoiData = VolumeData<Vertex>.FromVoronoi(generators);
+            //voronoiData.BoundingBox = tetrahedralizationData.BoundingBox;
+            //bitmap = new System.Drawing.Bitmap(800, 800);
+            //VolumeSlicer.Slice(bitmap, 2, 0.4, voronoiData);
+            //bitmap.Save("voronoiSmallData.png");
 
             var volumeData = VolumeIntersection<Vertex>.Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
 
-            volumeData.BoundingBox = tetrahedralizationData.BoundingBox;
+            //volumeData.BoundingBox = tetrahedralizationData.BoundingBox;
 
-            bitmap = new System.Drawing.Bitmap(800, 800);
-            VolumeSlicer.Slice(bitmap, 2, 0.4, volumeData);
-            bitmap.Save("intersectSmallData.png");
+            //bitmap = new System.Drawing.Bitmap(800, 800);
+            //VolumeSlicer.Slice(bitmap, 2, 0.4, volumeData);
+            //bitmap.Save("intersectSmallData.png");
         }
 
         [TestMethod]
@@ -78,10 +78,12 @@ namespace TestVolumeIntersection
             var tetrahedralization = reader.Read("smalldata.dat");
 
             var tetrahedralizationData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
+            var boundingBox = new BoundingBox<Vertex>(tetrahedralization.Vertices, 3);
+
             for(int i = 0; i < 10; i++)
             {
                 var bitmap = new System.Drawing.Bitmap(800, 800);
-                VolumeSlicer.Slice(bitmap, 2, 0.2 + i * 0.05, tetrahedralizationData);
+                VolumeSlicer.Slice(bitmap, 2, 0.2 + i * 0.05, tetrahedralizationData, boundingBox);
                 bitmap.Save("Intersect" + i + "/smalldata.png");
             }
 
@@ -94,22 +96,19 @@ namespace TestVolumeIntersection
             }
 
             var voronoiData = VolumeData<Vertex>.FromVoronoi(generators);
-            voronoiData.BoundingBox = tetrahedralizationData.BoundingBox;
             for (int i = 0; i < 10; i++)
             {
                 var bitmap = new System.Drawing.Bitmap(800, 800);
-                VolumeSlicer.Slice(bitmap, 2, 0.2 + i * 0.05, voronoiData);
+                VolumeSlicer.Slice(bitmap, 2, 0.2 + i * 0.05, voronoiData, boundingBox);
                 bitmap.Save("Intersect" + i + "/voronoiSmallData.png");
             }
 
             var volumeData = VolumeIntersection<Vertex>.Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
 
-            volumeData.BoundingBox = tetrahedralizationData.BoundingBox;
-
             for (int i = 0; i < 10; i++)
             {
                 var bitmap = new System.Drawing.Bitmap(800, 800);
-                VolumeSlicer.Slice(bitmap, 2, 0.2 + i * 0.05, volumeData);
+                VolumeSlicer.Slice(bitmap, 2, 0.2 + i * 0.05, volumeData, boundingBox);
                 bitmap.Save("Intersect" + i + "/intersectSmallData.png");
             }
         }
