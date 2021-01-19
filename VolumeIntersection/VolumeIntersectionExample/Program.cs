@@ -54,7 +54,9 @@ namespace VolumeIntersectionExample
             //VolumeSlicer.Slice(bitmap, 2, 0.4, tetrahedralizationData, boundingBox);
             //bitmap.Save("example.png");
 
-            var volumeData = VolumeIntersection<Vertex>.Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
+            var volumeIntersection = new VolumeIntersection<Vertex>();
+
+            var volumeData = volumeIntersection.Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
 
             //bitmap = new System.Drawing.Bitmap(800, 800);
             //VolumeSlicer.Slice(bitmap, 2, 0.4, volumeData, boundingBox);

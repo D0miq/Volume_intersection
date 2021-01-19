@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.LinearAlgebra.Double;
-using MIConvexHull;
+﻿using MIConvexHull;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +43,7 @@ namespace VolumeIntersection
         /// <param name="cells">Cells of a triangulation (tetrahedralization).</param>
         /// <param name="generators">Voronoi generators.</param>
         /// <returns>Volumetric data with intersections.</returns>
-        public static VolumeData<TVector> Intersect<TCell>(List<TVector> vertices, List<TCell> cells, List<TVector> generators) where TCell : ITriangleCell
+        public VolumeData<TVector> Intersect<TCell>(List<TVector> vertices, List<TCell> cells, List<TVector> generators) where TCell : ITriangleCell
         {
             // Create volumetric data from triangulation and voronoi diagram
             var triangulationVolumeData = VolumeData<TVector>.FromTriangulation(vertices, cells);
@@ -86,29 +85,29 @@ namespace VolumeIntersection
         /// <param name="volumeData1">First volumetric data.</param>
         /// <param name="volumeData2">Second volumetric data.</param>
         /// <returns>Volumetric data with intersections.</returns>
-        public static VolumeData<TVector> Intersect(VolumeData<TVector> volumeData1, VolumeData<TVector> volumeData2)
-        {
-            Random rd = new Random();
-            int firstIndex, secondIndex;
+        //public VolumeData<TVector> Intersect(VolumeData<TVector> volumeData1, VolumeData<TVector> volumeData2)
+        //{
+        //    Random rd = new Random();
+        //    int firstIndex, secondIndex;
 
-            // Generate random point inside volume data and find cells that contain it
-            do
-            {
-                var start = new TVector() { Position = new double[] { } };
+        //    // Generate random point inside volume data and find cells that contain it
+        //    do
+        //    {
+        //        var start = new TVector() { Position = new double[] { } };
 
-                firstIndex = volumeData1.Cells.FindIndex(cell => cell.Contains(start));
-                secondIndex = volumeData2.Cells.FindIndex(cell => cell.Contains(start));
-            } while (firstIndex == -1 || secondIndex == -1);
+        //        firstIndex = volumeData1.Cells.FindIndex(cell => cell.Contains(start));
+        //        secondIndex = volumeData2.Cells.FindIndex(cell => cell.Contains(start));
+        //    } while (firstIndex == -1 || secondIndex == -1);
 
-            var intersections = FindIntersectingCells(volumeData1.Cells[firstIndex], volumeData2.Cells[secondIndex]);
+        //    var intersections = FindIntersectingCells(volumeData1.Cells[firstIndex], volumeData2.Cells[secondIndex]);
 
-            return new VolumeData<TVector>()
-            {
-                Cells = intersections
-            };
-        }
+        //    return new VolumeData<TVector>()
+        //    {
+        //        Cells = intersections
+        //    };
+        //}
 
-        private static List<Cell<TVector>> FindIntersectingCells(Cell<TVector> firstCell, Cell<TVector> secondCell) 
+        private List<Cell<TVector>> FindIntersectingCells(Cell<TVector> triangleCell, Cell<TVector> voronoiCellIndex)
         { 
             var intersections = new List<Cell<TVector>>();
 
@@ -116,7 +115,7 @@ namespace VolumeIntersection
             var visitedPairs = new HashSet<Pair>();
             var cellQueue = new Queue<Pair>();
 
-            var pair = new Pair(firstCell, secondCell);
+            var pair = new Pair(triangleCell, voronoiCellIndex);
             visitedPairs.Add(pair);
             cellQueue.Enqueue(pair);
 
@@ -155,7 +154,8 @@ namespace VolumeIntersection
                     Edges = edges,
                 };
 
-                cell.VoronoiIndex = firstCell.VoronoiIndex != -1 ? firstCell.VoronoiIndex : secondCell.VoronoiIndex;
+                cell.VoronoiIndex = tempFirstCell.VoronoiIndex == -1 ? tempSecondCell.VoronoiIndex : tempFirstCell.VoronoiIndex;
+                cell.TriangleIndex = tempFirstCell.TriangleIndex == -1 ? tempSecondCell.TriangleIndex : tempFirstCell.TriangleIndex;
 
                 try
                 {
@@ -170,7 +170,7 @@ namespace VolumeIntersection
             return intersections;
         }
 
-        private static void FindCentroid(List<TVector> vertices, Cell<TVector> cell)
+        private void FindCentroid(List<TVector> vertices, Cell<TVector> cell)
         {
             int dimension = vertices[0].Position.Length;
 
@@ -202,15 +202,13 @@ namespace VolumeIntersection
                     index++;
                 }
 
-                var matrix = DenseMatrix.OfColumnArrays(triangleEdges);
-
                 if (dimension == 2)
                 {
-                    area = Math.Abs(matrix.Determinant()) / 2;
+                    area = Math.Abs(MathUtils.Determinant(triangleEdges)) / 2;
                 }
                 else if (dimension == 3)
                 {
-                    area = Math.Abs(matrix.Determinant()) / 6;
+                    area = Math.Abs(MathUtils.Determinant(triangleEdges)) / 6;
                 }
 
                 // Compute centroid of the triangle
@@ -241,7 +239,7 @@ namespace VolumeIntersection
             };
         }
 
-        private static List<Edge<TVector>> RemoveHalfSpaces(Cell<TVector> c1, Cell<TVector> c2, out List<TVector> intersectionPoints)
+        private List<Edge<TVector>> RemoveHalfSpaces(Cell<TVector> c1, Cell<TVector> c2, out List<TVector> intersectionPoints)
         {
             var usedHalfSpaces = new Dictionary<Edge<TVector>, HashSet<TVector>>();
             var usedIntersectingPoints = new HashSet<TVector>(new VectorComparer<TVector>());
@@ -355,7 +353,7 @@ namespace VolumeIntersection
             return usedHalfSpaces.Keys.ToList();
         }
 
-        private static bool FindIntersectionPoint(List<Edge<TVector>> edges, out TVector intersection)
+        private bool FindIntersectionPoint(List<Edge<TVector>> edges, out TVector intersection)
         {
             int normalDimension = edges[0].Normal.Position.Length;
 
@@ -387,7 +385,7 @@ namespace VolumeIntersection
             return x[normalDimension] != 0;
         }
 
-        private static IEnumerable<DefaultTriangulationCell<TVector>> Triangulate<TVector>(int dimension, List<TVector> vertices) where TVector : IVector
+        private IEnumerable<DefaultTriangulationCell<TVector>> Triangulate<TVector>(int dimension, List<TVector> vertices) where TVector : IVector
         {
             IEnumerable<DefaultTriangulationCell<TVector>> triangles = null;
 
