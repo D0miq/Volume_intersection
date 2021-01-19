@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.LinearAlgebra;
-using System;
+﻿using System;
 
 namespace VolumeIntersection
 {
@@ -12,6 +11,70 @@ namespace VolumeIntersection
         /// Eps used for eps tests.
         /// </summary>
         public const double Eps = 1E-10;
+
+        public static double Determinant(double[][] m)
+        {
+            var dimension = m[0].Length;
+
+            switch (dimension)
+            {
+                case 4: return Det4x4(m);
+                case 3: return Det3x3(m);
+                case 2: return m[0][0] * m[1][1] - m[0][1] * m[1][0];
+                default: throw new NotImplementedException("Determinant of more than 4 dimensions is not supported.");
+            }
+        }
+
+        public static double Determinant(double[,] m)
+        {
+            var dimension = m.GetLength(0);
+
+            switch(dimension)
+            {
+                case 4: return Det4x4(m);
+                case 3: return Det3x3(m);
+                case 2: return m[0, 0] * m[1, 1] - m[0, 1] * m[1, 0];
+                default: throw new NotImplementedException("Determinant of more than 4 dimensions is not supported.");
+            }
+        }
+
+        public static double Det3x3(double[][] m)
+        {
+            return m[0][0] * ((m[1][1] * m[2][2]) - (m[2][1] * m[1][2])) - m[0][1] * (m[1][0] * m[2][2] - m[2][0] * m[1][2]) + m[0][2] * (m[1][0] * m[2][1] - m[2][0] * m[1][1]);
+        }
+
+        public static double Det3x3(double[,] m)
+        {
+            if (m.GetLength(0) != 3 || m.GetLength(1) != 3)	
+                throw new ArgumentException("Both dimensions must be 3 values long.");
+
+            return m[0, 0] * ((m[1, 1] * m[2, 2]) - (m[2, 1] * m[1, 2])) - m[0, 1] * (m[1, 0] * m[2, 2] - m[2, 0] * m[1, 2]) + m[0, 2] * (m[1, 0] * m[2, 1] - m[2, 0] * m[1, 1]);
+        }
+
+        public static double Det4x4(double[][] m)
+        {
+            double[,] sub1 = { { m[1][1], m[1][2], m[1][3] }, { m[2][1], m[2][2], m[2][3] }, { m[3][1], m[3][2], m[3][3] } };
+            double[,] sub2 = { { m[1][0], m[1][2], m[1][3] }, { m[2][0], m[2][2], m[2][3] }, { m[3][0], m[3][2], m[3][3] } };
+            double[,] sub3 = { { m[1][0], m[1][1], m[1][3] }, { m[2][0], m[2][1], m[2][3] }, { m[3][0], m[3][1], m[3][3] } };
+            double[,] sub4 = { { m[1][0], m[1][1], m[1][2] }, { m[2][0], m[2][1], m[2][2] }, { m[3][0], m[3][1], m[3][2] } };
+
+            return m[0][0] * Det3x3(sub1) - m[0][1] * Det3x3(sub2) + m[0][2] * Det3x3(sub3) - m[0][3] * Det3x3(sub4);
+        }
+
+        public static double Det4x4(double[,] m)
+        {
+            if (m.GetLength(0) != 4 || m.GetLength(1) != 4)
+            {
+                throw new ArgumentException("Both dimensions must be 4 values long.");
+            }
+
+            double[,] sub1 = { { m[1, 1], m[1, 2], m[1, 3] }, { m[2, 1], m[2, 2], m[2, 3] }, { m[3, 1], m[3, 2], m[3, 3] } };
+            double[,] sub2 = { { m[1, 0], m[1, 2], m[1, 3] }, { m[2, 0], m[2, 2], m[2, 3] }, { m[3, 0], m[3, 2], m[3, 3] } };
+            double[,] sub3 = { { m[1, 0], m[1, 1], m[1, 3] }, { m[2, 0], m[2, 1], m[2, 3] }, { m[3, 0], m[3, 1], m[3, 3] } };
+            double[,] sub4 = { { m[1, 0], m[1, 1], m[1, 2] }, { m[2, 0], m[2, 1], m[2, 2] }, { m[3, 0], m[3, 1], m[3, 2] } };
+
+            return m[0, 0] * Det3x3(sub1) - m[0, 1] * Det3x3(sub2) + m[0, 2] * Det3x3(sub3) - m[0, 3] * Det3x3(sub4);
+        }
 
         /// <summary>
         /// Computes linear equation with determinants.
@@ -51,7 +114,7 @@ namespace VolumeIntersection
             for (int j = 0; j < halfSpace.Length; j++)
             {
                 // Create a submatrix
-                double[] m = new double[subMatrixSize * subMatrixSize];
+                double[,] m = new double[subMatrixSize, subMatrixSize];
 
                 int matrixIndex = 0;
 
@@ -63,7 +126,7 @@ namespace VolumeIntersection
                     {
                         for (int l = 0; l < vectors.Length; l++)
                         {
-                            m[(matrixIndex * vectors.Length) + l] = vectors[l][k];
+                            m[l, matrixIndex] = vectors[l][k];
                         }
 
                         matrixIndex++;
@@ -71,8 +134,8 @@ namespace VolumeIntersection
                 }
 
                 // Compute determinant of the submatrix
-                Matrix<double> matrix = Matrix<double>.Build.Dense(subMatrixSize, subMatrixSize, m);
-                halfSpace[j] = (j % 2) == 0 ? 1 * matrix.Determinant() : -1 * matrix.Determinant();
+                //Matrix<double> matrix = Matrix<double>.Build.Dense(subMatrixSize, subMatrixSize, m);
+                halfSpace[j] = (j % 2) == 0 ? 1 * Determinant(m) : -1 * Determinant(m);
             }
 
             return halfSpace;
