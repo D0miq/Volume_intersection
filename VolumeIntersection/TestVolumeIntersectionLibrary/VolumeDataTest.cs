@@ -41,13 +41,13 @@ namespace TestVolumeIntersection
                 new Vertex(0, 0, -1) { Index = 6 }
             };
 
-            var volumeData = VolumeData<Vertex>.FromVoronoi(generators);
+            var volumeData = IVolumeData<Vertex>.FromVoronoi(generators);
         }
 
         [TestMethod]
         public void TestFromTriangulationSingleTriangleCellCentroid()
         {
-            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, triangles);
+            var volumeData = IVolumeData<Vertex>.FromTriangulation(vertices, triangles);
             var centroid = volumeData.Cells[0].Centroid.Position;
 
             Assert.AreEqual(centroid[0], 1.0/3.0);
@@ -70,7 +70,7 @@ namespace TestVolumeIntersection
                 new Tetrahedron(0, 1, 2, 3)
             };
 
-            var volumeData = VolumeData<Vertex>.FromTriangulation(vertices, tetrahedra);
+            var volumeData = IVolumeData<Vertex>.FromTriangulation(vertices, tetrahedra);
         }
 
         [TestMethod]
@@ -79,7 +79,7 @@ namespace TestVolumeIntersection
             var reader = new TetrahedralizationReader();
             var tetrahedralization = reader.Read("smalldata.dat");
 
-            var volumeData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
+            var volumeData = IVolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
         }
     }
 }

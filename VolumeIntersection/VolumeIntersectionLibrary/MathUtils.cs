@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MathNet.Numerics.LinearAlgebra;
+using System;
+using System.Numerics;
 
 namespace VolumeIntersection
 {
@@ -12,43 +14,19 @@ namespace VolumeIntersection
         /// </summary>
         public const double Eps = 1E-10;
 
-        public static double Determinant(double[][] m)
+        /// <summary>
+        /// Matrix in row order.
+        /// </summary>
+        /// <param name="rows"></param>
+        /// <param name="columns"></param>
+        /// <param name="m"></param>
+        /// <returns></returns>
+        public static double Det3x3(float[] m)
         {
-            var dimension = m[0].Length;
+            if (m.Length != 9)
+                throw new ArgumentException("The array has to containt 9 elements.");
 
-            switch (dimension)
-            {
-                case 4: return Det4x4(m);
-                case 3: return Det3x3(m);
-                case 2: return m[0][0] * m[1][1] - m[0][1] * m[1][0];
-                default: throw new NotImplementedException("Determinant of more than 4 dimensions is not supported.");
-            }
-        }
-
-        public static double Determinant(double[,] m)
-        {
-            var dimension = m.GetLength(0);
-
-            switch(dimension)
-            {
-                case 4: return Det4x4(m);
-                case 3: return Det3x3(m);
-                case 2: return m[0, 0] * m[1, 1] - m[0, 1] * m[1, 0];
-                default: throw new NotImplementedException("Determinant of more than 4 dimensions is not supported.");
-            }
-        }
-
-        public static double Det3x3(double[][] m)
-        {
-            return m[0][0] * ((m[1][1] * m[2][2]) - (m[2][1] * m[1][2])) - m[0][1] * (m[1][0] * m[2][2] - m[2][0] * m[1][2]) + m[0][2] * (m[1][0] * m[2][1] - m[2][0] * m[1][1]);
-        }
-
-        public static double Det3x3(double[,] m)
-        {
-            if (m.GetLength(0) != 3 || m.GetLength(1) != 3)	
-                throw new ArgumentException("Both dimensions must be 3 values long.");
-
-            return m[0, 0] * ((m[1, 1] * m[2, 2]) - (m[2, 1] * m[1, 2])) - m[0, 1] * (m[1, 0] * m[2, 2] - m[2, 0] * m[1, 2]) + m[0, 2] * (m[1, 0] * m[2, 1] - m[2, 0] * m[1, 1]);
+            return m[0] * ((m[4] * m[8]) - (m[7] * m[5])) - m[1] * (m[3] * m[8] - m[6] * m[5]) + m[2] * (m[3] * m[7] - m[6] * m[4]);
         }
 
         public static double Det4x4(double[][] m)
@@ -111,31 +89,92 @@ namespace VolumeIntersection
             // | b3 c3 1 | | a3 c3 1 | | a3 b3 1 | | a3 b3 c3 |
 
             // Compute determinant for each variable of the half space standard form
-            for (int j = 0; j < halfSpace.Length; j++)
+            //for (int j = 0; j < halfSpace.Length; j++)
+            //{
+            //    // Create a submatrix
+            //    double[,] m = new double[subMatrixSize, subMatrixSize];
+
+            //    int matrixIndex = 0;
+
+            //    // Fill in values of the submatrix
+            //    for (int k = 0; k < dimension; k++)
+            //    {
+            //        // Skip k-th coordinate when its column shouldn't be inside the submatrix
+            //        if (j != k)
+            //        {
+            //            for (int l = 0; l < vectors.Length; l++)
+            //            {
+            //                m[l, matrixIndex] = vectors[l][k];
+            //            }
+
+            //            matrixIndex++;
+            //        }
+            //    }
+
+            //    // Compute determinant of the submatrix
+            //    //Matrix<double> matrix = Matrix<double>.Build.Dense(subMatrixSize, subMatrixSize, m);
+            //    halfSpace[j] = (j % 2) == 0 ? Determinant(m) : -Determinant(m);
+            //}
+
+            if (dimension == 3)
             {
-                // Create a submatrix
-                double[,] m = new double[subMatrixSize, subMatrixSize];
+                double[,] sub = {
+                    { vectors[0][1], vectors[0][2] },
+                    { vectors[1][1], vectors[1][2] },
+                    { vectors[2][1], vectors[2][2]  }
+                };
 
-                int matrixIndex = 0;
+                halfSpace[0] = Determinant(sub);
 
-                // Fill in values of the submatrix
-                for (int k = 0; k < dimension; k++)
-                {
-                    // Skip k-th coordinate when its column shouldn't be inside the submatrix
-                    if (j != k)
-                    {
-                        for (int l = 0; l < vectors.Length; l++)
-                        {
-                            m[l, matrixIndex] = vectors[l][k];
-                        }
+                sub = new double[,]{
+                    { vectors[0][0], vectors[0][2] },
+                    { vectors[1][0], vectors[1][2] },
+                    { vectors[2][0], vectors[2][2] }
+                };
 
-                        matrixIndex++;
-                    }
-                }
+                halfSpace[1] = -Determinant(sub);
 
-                // Compute determinant of the submatrix
-                //Matrix<double> matrix = Matrix<double>.Build.Dense(subMatrixSize, subMatrixSize, m);
-                halfSpace[j] = (j % 2) == 0 ? 1 * Determinant(m) : -1 * Determinant(m);
+                sub = new double[,]{
+                    { vectors[0][0], vectors[0][1] },
+                    { vectors[1][0], vectors[1][1] },
+                    { vectors[2][0], vectors[2][1] }
+                };
+
+                halfSpace[2] = Determinant(sub);
+            }
+            if (dimension == 4)
+            {
+                double[,] sub = {
+                    { vectors[0][1], vectors[0][2], vectors[0][3] },
+                    { vectors[1][1], vectors[1][2], vectors[1][3] },
+                    { vectors[2][1], vectors[2][2], vectors[2][3] }
+                };
+
+                halfSpace[0] = Determinant(sub);
+
+                sub = new double[,]{
+                    { vectors[0][0], vectors[0][2], vectors[0][3] },
+                    { vectors[1][0], vectors[1][2], vectors[1][3] },
+                    { vectors[2][0], vectors[2][2], vectors[2][3] }
+                };
+
+                halfSpace[1] = -Determinant(sub);
+
+                sub = new double[,]{
+                    { vectors[0][0], vectors[0][1], vectors[0][3] },
+                    { vectors[1][0], vectors[1][1], vectors[1][3] },
+                    { vectors[2][0], vectors[2][1], vectors[2][3] }
+                };
+
+                halfSpace[2] = Determinant(sub);
+
+                sub = new double[,]{
+                    { vectors[0][0], vectors[0][1], vectors[0][2] },
+                    { vectors[1][0], vectors[1][1], vectors[1][2] },
+                    { vectors[2][0], vectors[2][1], vectors[2][2] }
+                };
+
+                halfSpace[3] = -Determinant(sub);
             }
 
             return halfSpace;
@@ -161,6 +200,11 @@ namespace VolumeIntersection
             }
 
             return dot;
+        }
+
+        public static double[] CrossProduct(double[] v1, double[] v2)
+        {
+            return new double[] { v1[1] * v2[2] - v1[2] * v2[1], -(v1[0] * v2[2] - v1[2] * v2[0]), v1[0] * v2[1] - v1[1] * v2[0] };
         }
 
         /// <summary>

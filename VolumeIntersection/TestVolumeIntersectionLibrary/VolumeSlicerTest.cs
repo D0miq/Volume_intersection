@@ -18,41 +18,41 @@ namespace TestVolumeIntersection
                 Max = new Vertex(1, 1, 1)
             };
 
-            var cell = new Cell<Vertex>();
+            var cell = new Cell2D<Vertex>();
 
-            var edge1 = new Edge<Vertex>()
+            var edge1 = new Edge2D<Vertex>()
             {
                 Normal = new Vertex(-0.25f, -0.5f, -0.25f),
                 C = -0.375f,
                 Source = cell,
             };
 
-            var edge2 = new Edge<Vertex>()
+            var edge2 = new Edge2D<Vertex>()
             {
                 Normal = new Vertex(0, 0, 1),
                 C = 0,
                 Source = cell
             };
 
-            var edge3 = new Edge<Vertex>()
+            var edge3 = new Edge2D<Vertex>()
             {
                 Normal = new Vertex(1, 0, 0),
                 C = 0,
                 Source = cell
             };
 
-            var edge4 = new Edge<Vertex>()
+            var edge4 = new Edge2D<Vertex>()
             {
                 Normal = new Vertex(0, 1, 0),
                 C = 0,
                 Source = cell
             };
 
-            cell.Edges = new List<Edge<Vertex>>() { edge1, edge2, edge3, edge4 };
+            cell.Edges = new List<Edge2D<Vertex>>() { edge1, edge2, edge3, edge4 };
 
             var volumeData = new VolumeData<Vertex>()
             {
-                Cells = new List<Cell<Vertex>>() { cell }
+                Cells = new List<Cell2D<Vertex>>() { cell }
             };
 
             var bitmap = new System.Drawing.Bitmap(600, 800);
@@ -71,7 +71,7 @@ namespace TestVolumeIntersection
                 generators.Add(new Vertex(rd.NextDouble() * 2 - 1, rd.NextDouble() * 2 - 1, rd.NextDouble() * 2 - 1) { Index = i });
             }
 
-            var volumeData = VolumeData<Vertex>.FromVoronoi(generators);
+            var volumeData = IVolumeData<Vertex>.FromVoronoi(generators);
             var boundingBox = new BoundingBox<Vertex>()
             {
                 Max = new Vertex(1, 1, 1),
@@ -89,7 +89,7 @@ namespace TestVolumeIntersection
             var reader = new TetrahedralizationReader();
             var tetrahedralization = reader.Read("bigdata.dat");
 
-            var volumeData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
+            var volumeData = IVolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
 
             double xMin = double.MaxValue;
             double xMax = double.MinValue;

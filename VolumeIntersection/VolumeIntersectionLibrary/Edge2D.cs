@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 
 namespace VolumeIntersection
 {
@@ -15,27 +16,27 @@ namespace VolumeIntersection
     /// The same goes for higher dimension.
     /// </summary>
     /// <typeparam name="TVector">Vector type</typeparam>
-    public class Edge<TVector> where TVector : IVector
+    public class Edge2D
     {
         /// <summary>
         /// Normal of this half space.
         /// </summary>
-        public TVector Normal { get; set; }
+        public Vector2 Normal { get; set; }
 
         /// <summary>
         /// Right side of the standard form of this half space.
         /// </summary>
-        public double C { get; set; }
+        public float C { get; set; }
 
         /// <summary>
         /// Source cell of this half space.
         /// </summary>
-        public Cell<TVector> Source { get; set; }
+        public Cell2D Source { get; set; }
 
         /// <summary>
         /// Target cell of this half space.
         /// </summary>
-        public Cell<TVector> Target { get; set; }
+        public Cell2D Target { get; set; }
 
         /// <summary>
         /// Compares this edge with another object.
@@ -44,8 +45,8 @@ namespace VolumeIntersection
         /// <returns>True - objects are equals, false otherwise.</returns>
         public override bool Equals(object obj)
         {
-            return obj is Edge<TVector> edge &&
-                   EqualityComparer<TVector>.Default.Equals(Normal, edge.Normal) &&
+            return obj is Edge2D edge &&
+                   EqualityComparer<Vector2>.Default.Equals(Normal, edge.Normal) &&
                    C == edge.C;
         }
 
@@ -56,7 +57,7 @@ namespace VolumeIntersection
         public override int GetHashCode()
         {
             int hashCode = 1469261108;
-            hashCode = hashCode * -1521134295 + EqualityComparer<TVector>.Default.GetHashCode(Normal);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Vector2>.Default.GetHashCode(Normal);
             hashCode = hashCode * -1521134295 + C.GetHashCode();
             return hashCode;
         }
