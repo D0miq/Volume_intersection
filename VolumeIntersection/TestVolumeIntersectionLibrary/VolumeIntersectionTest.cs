@@ -77,7 +77,7 @@ namespace TestVolumeIntersection
             var reader = new TetrahedralizationReader();
             var tetrahedralization = reader.Read("smalldata.dat");
 
-            var tetrahedralizationData = IVolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
+            var tetrahedralizationData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
             var boundingBox = new BoundingBox<Vertex>(tetrahedralization.Vertices, 3);
 
             for(int i = 0; i < 10; i++)
@@ -95,7 +95,7 @@ namespace TestVolumeIntersection
                 generators.Add(new Vertex(rd.NextDouble() * 0.6 + 0.1 , rd.NextDouble() * 0.9, rd.NextDouble() * 0.7 + 0.2) { Index = i });
             }
 
-            var voronoiData = IVolumeData<Vertex>.FromVoronoi(generators);
+            var voronoiData = VolumeData<Vertex>.FromVoronoi(generators);
             for (int i = 0; i < 10; i++)
             {
                 var bitmap = new System.Drawing.Bitmap(800, 800);

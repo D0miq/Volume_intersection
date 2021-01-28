@@ -7,9 +7,9 @@ using System.Numerics;
 
 namespace VolumeIntersection
 {
-    public class VolumeIntersection 
+    public class VolumeIntersection<TVolumeData>
     {
-        private class Pair<TCell> where TCell : Cell 
+        private class Pair<TCell>
         {
             public TCell FirstCell;
             public TCell SecondCell;
@@ -34,6 +34,28 @@ namespace VolumeIntersection
                 return hashCode;
             }
         }
+
+        public TVolumeData Intersect<TVector, TCell, TIndexedVector>(List<TVector> vertices, List<TCell> cells, List<TIndexedVector> generators) where TVector : IVector where TCell : ITriangleCell where TIndexedVector : IIndexedVector
+        {
+            // Test dimensions
+            var triangleDimension = this.GetDimension(vertices);
+            var voronoiDimension = this.GetDimension(generators);
+
+            if (triangleDimension != 2 || voronoiDimension != 2)
+            {
+                throw new ArgumentException("Triangulation vertices and voronoi generators must have the same dimension.");
+            }
+
+            TVolumeData triangulationData = ;
+            TVolumeData voronoiData = ;
+
+            TVolumeData volumeData = ;
+        }
+
+
+
+
+
 
         /// <summary>
         /// Finds intersection between triangulation (tetrahedralization) and voronoi diagram.

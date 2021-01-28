@@ -28,7 +28,7 @@ namespace VolumeIntersection.SliceVisualisation
         /// <param name="axis">Slicing axis.</param>
         /// <param name="value">Slicing value.</param>
         /// <param name="volume">3D Volumetric data.</param>
-        public static void Slice<TVector>(Bitmap bitmap, int axis, double value, IVolumeData<TVector> volume, BoundingBox<TVector> volumeBoundingBox)
+        public static void Slice<TVector>(Bitmap bitmap, int axis, double value, VolumeData<TVector> volume, BoundingBox<TVector> volumeBoundingBox)
             where TVector : IVector, new()
         {
             // Setup color of each cell

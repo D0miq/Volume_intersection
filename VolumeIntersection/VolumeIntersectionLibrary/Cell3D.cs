@@ -3,18 +3,8 @@ using System.Numerics;
 
 namespace VolumeIntersection
 {
-    public class Cell3D : Cell
+    public class Cell3D : Cell<Vector3, Edge3D>
     {
-        /// <summary>
-        /// Centroid of this cell.
-        /// </summary>
-        public Vector3 Centroid { get; set; }
-
-        /// <summary>
-        /// Edges of this cell.
-        /// </summary>
-        public List<Edge3D> Edges { get; set; }
-
         /// <summary>
         /// Creates a new cell
         /// </summary>
@@ -28,9 +18,9 @@ namespace VolumeIntersection
         /// </summary>
         /// <param name="point">The point.</param>
         /// <returns>True - cell contains the point, false otherwise.</returns>
-        public bool Contains(Vector3 point)
+        public override bool Contains(Vector3 point)
         {
-            return base.Contains(this.Edges, (edge) => Vector3.Dot(edge.Normal, point) - edge.C);
+            return base.Contains((edge) => Vector3.Dot(edge.Normal, point) - edge.C);
         }
     }
 }

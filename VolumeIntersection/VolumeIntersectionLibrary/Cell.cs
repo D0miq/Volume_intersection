@@ -3,8 +3,18 @@ using System.Collections.Generic;
 
 namespace VolumeIntersection
 {
-    public abstract class Cell
+    public abstract class Cell<TVector, TEdge>
     {
+        /// <summary>
+        /// Centroid of this cell.
+        /// </summary>
+        public TVector Centroid { get; set; }
+
+        /// <summary>
+        /// Edges of this cell.
+        /// </summary>
+        public List<TEdge> Edges { get; set; }
+
         /// <summary>
         /// What triangle cell was a parent of this cell?
         /// </summary>
@@ -25,15 +35,17 @@ namespace VolumeIntersection
         /// </summary>
         internal bool Visited { get; set; }
 
+        public abstract bool Contains(TVector point);
+
         /// <summary>
         /// Checks if this cell contains the provided direction function.
         /// </summary>
         /// <param name="edges">The list of edges.</param>
         /// <param name="dirFunction">Direction function.</param>
         /// <returns>True - cell contains the point, false otherwise.</returns>
-        protected bool Contains<E>(List<E> edges, Func<E, float> dirFunction)
+        protected bool Contains(Func<TEdge, float> dirFunction)
         {
-            foreach (var edge in edges)
+            foreach (var edge in this.Edges)
             {
                 // Check position of the point. Compares to eps to avoid errors with points really close to an edge. 
                 // In this case the dir would be near -0.

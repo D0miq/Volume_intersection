@@ -71,7 +71,7 @@ namespace TestVolumeIntersection
                 generators.Add(new Vertex(rd.NextDouble() * 2 - 1, rd.NextDouble() * 2 - 1, rd.NextDouble() * 2 - 1) { Index = i });
             }
 
-            var volumeData = IVolumeData<Vertex>.FromVoronoi(generators);
+            var volumeData = VolumeData<Vertex>.FromVoronoi(generators);
             var boundingBox = new BoundingBox<Vertex>()
             {
                 Max = new Vertex(1, 1, 1),
@@ -89,7 +89,7 @@ namespace TestVolumeIntersection
             var reader = new TetrahedralizationReader();
             var tetrahedralization = reader.Read("bigdata.dat");
 
-            var volumeData = IVolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
+            var volumeData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
 
             double xMin = double.MaxValue;
             double xMax = double.MinValue;
