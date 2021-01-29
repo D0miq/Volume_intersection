@@ -35,7 +35,7 @@ namespace VolumeIntersection
             }
         }
 
-        protected abstract void RemoveHalfSpaces();
+        protected abstract List<TEdge> RemoveHalfSpaces(TCell c1, TCell c2, out List<TVector> intersectionPoints);
 
         protected abstract void FindCentroid(List<TVector> vertices, TCell cell);
 
@@ -49,7 +49,7 @@ namespace VolumeIntersection
         /// <param name="cells">Cells of a triangulation (tetrahedralization).</param>
         /// <param name="generators">Voronoi generators.</param>
         /// <returns>Volumetric data with intersections.</returns>
-        public TVolumeData Intersect<TInVector, TInCell, TIndexedVector>(List<TInVector> vertices, List<TInCell> cells, List<TIndexedVector> generators) where TInVector : IVector where TInCell : ITriangleCell where TIndexedVector : IIndexedVector
+        public TVolumeData Intersect<TInVector, TInCell, TIndexedVector>(List<TInVector> vertices, List<TInCell> cells, List<TIndexedVector> generators) where TInVector : IVertex where TInCell : ITriangleCell where TIndexedVector : IIndexedVertex
         {
             // Test dimensions
             var triangleDimension = this.GetDimension(vertices);
@@ -186,198 +186,7 @@ namespace VolumeIntersection
             return intersections;
         }
 
-        private List<TEdge> RemoveHalfSpaces(TCell c1, TCell c2, out List<TVector> intersectionPoints)
-        {
-            var usedHalfSpaces = new Dictionary<TEdge, HashSet<TVector>>();
-            var usedIntersectingPoints = new HashSet<TVector>(new VectorComparer<TVector>());
-
-            var halfSpaces = new List<TEdge>(c1.Edges.Count + c2.Edges.Count);
-            halfSpaces.AddRange(c1.Edges);
-            halfSpaces.AddRange(c2.Edges);
-
-            if (this.dimension == 2)
-            {
-                for (int i = 0; i < halfSpaces.Count; i++)
-                {
-                    for (int j = i + 1; j < halfSpaces.Count; j++)
-                    {
-                        var success = FindIntersectionPoint(new List<Edge2D<TVector>>() { halfSpaces[i], halfSpaces[j] }, out TVector intersectionPoint);
-
-                        if (success && (c1.Contains(intersectionPoint) && c2.Contains(intersectionPoint)))
-                        {
-                            if(usedHalfSpaces.TryGetValue(halfSpaces[i], out HashSet<TVector> vertices))
-                            {
-                                vertices.Add(intersectionPoint);
-                            } else
-                            {
-                                var newVertices = new HashSet<TVector>(new VectorComparer<TVector>());
-                                newVertices.Add(intersectionPoint);
-                                usedHalfSpaces.Add(halfSpaces[i], newVertices);
-                            }
-
-                            if(usedHalfSpaces.TryGetValue(halfSpaces[j], out vertices))
-                            {
-                                vertices.Add(intersectionPoint);
-                            } else
-                            {
-                                var newVertices = new HashSet<TVector>(new VectorComparer<TVector>());
-                                newVertices.Add(intersectionPoint);
-                                usedHalfSpaces.Add(halfSpaces[j], newVertices);
-                            }
-
-                            usedIntersectingPoints.Add(intersectionPoint);
-                        }
-                    }
-                }
-
-                var toRemove = usedHalfSpaces.Where(pair => pair.Value.Count != 2).ToList();
-                foreach (var pair in toRemove)
-                {
-                    usedHalfSpaces.Remove(pair.Key);
-                }
-            }
-            else if (this.dimension == 3)
-            {
-                for (int i = 0; i < halfSpaces.Count; i++)
-                {
-                    for (int j = i + 1; j < halfSpaces.Count; j++)
-                    {
-                        for (int k = j + 1; k < halfSpaces.Count; k++)
-                        {
-                            var success = FindIntersectionPoint(new List<Edge2D<TVector>>() { halfSpaces[i], halfSpaces[j], halfSpaces[k] }, out TVector intersectionPoint);
-
-                            if (success && (c1.Contains(intersectionPoint) && c2.Contains(intersectionPoint)))
-                            {
-                                if (usedHalfSpaces.TryGetValue(halfSpaces[i], out HashSet<TVector> vertices))
-                                {
-                                    vertices.Add(intersectionPoint);
-                                }
-                                else
-                                {
-                                    var newVertices = new HashSet<TVector>(new VectorComparer<TVector>());
-                                    newVertices.Add(intersectionPoint);
-                                    usedHalfSpaces.Add(halfSpaces[i], newVertices);
-                                }
-
-                                if (usedHalfSpaces.TryGetValue(halfSpaces[j], out vertices))
-                                {
-                                    vertices.Add(intersectionPoint);
-                                }
-                                else
-                                {
-                                    var newVertices = new HashSet<TVector>(new VectorComparer<TVector>());
-                                    newVertices.Add(intersectionPoint);
-                                    usedHalfSpaces.Add(halfSpaces[j], newVertices);
-                                }
-
-                                if (usedHalfSpaces.TryGetValue(halfSpaces[k], out vertices))
-                                {
-                                    vertices.Add(intersectionPoint);
-                                }
-                                else
-                                {
-                                    var newVertices = new HashSet<TVector>(new VectorComparer<TVector>());
-                                    newVertices.Add(intersectionPoint);
-                                    usedHalfSpaces.Add(halfSpaces[k], newVertices);
-                                }
-
-                                usedIntersectingPoints.Add(intersectionPoint);
-                            }
-                        }
-                    }
-                }
-
-                var toRemove = usedHalfSpaces.Where(pair => pair.Value.Count < 3).ToList();
-                foreach (var pair in toRemove)
-                {
-                    usedHalfSpaces.Remove(pair.Key);
-                }
-            }
-
-            intersectionPoints = usedIntersectingPoints.ToList();
-            return usedHalfSpaces.Keys.ToList();
-        }
-
-        private bool FindIntersectionPoint(List<TEdge> edges, out TVector intersection)
-        {
-            //double[][] vectors = new double[edges.Count][];
-
-            //for (int i = 0; i < edges.Count; i++)
-            //{
-            //    vectors[i] = new double[this.dimension + 1];
-            //    var normal = edges[i].Normal.Position;
-
-            //    for (int j = 0; j < this.dimension; j++)
-            //    {
-            //        vectors[i][j] = normal[j];
-            //    }
-
-            //    vectors[i][this.dimension] = -edges[i].C;
-            //}
-
-            //double[] x = MathUtils.LinearEquationsDet(vectors);
-
-            //double[] position = new double[this.dimension];
-            //for (int i = 0; i < position.Length; i++)
-            //{
-            //    position[i] = x[i] / x[this.dimension];
-            //}
-
-            double[][] rows = new double[edges.Count][];
-            double[] b = new double[edges.Count];
-            for (int i = 0; i < edges.Count; i++)
-            {
-                rows[i] = edges[i].Normal.Position;
-                b[i] = edges[i].C;
-            }
-
-            var matrix = Matrix<double>.Build.DenseOfRowArrays(rows);
-            var bVector = Vector<double>.Build.Dense(b);
-
-            var position = matrix.Solve(bVector).ToArray();
-
-            intersection = new TVector() { Position = position };
-
-            //return x[normalDimension] != 0;
-
-            for (int i = 0; i < position.Length; i++)
-            {
-                if (double.IsNaN(position[i])) return false;
-            }
-
-            return true;
-        }
-
-        private IEnumerable<DefaultTriangulationCell<TVector>> Triangulate<TVector>(List<TVector> vertices) where TVector : IVector
-        {
-            IEnumerable<DefaultTriangulationCell<TVector>> triangles = null;
-
-            if (vertices.Count == 3 || vertices.Count == 4)
-            {
-                triangles = new List<DefaultTriangulationCell<TVector>>() { new DefaultTriangulationCell<TVector>() { Vertices = vertices.ToArray() } };
-
-                //if (dimension == 2)
-                //{
-                //    triangles = new List<DefaultTriangulationCell<TVector>>() { 
-                //        new DefaultTriangulationCell<TVector>() { Vertices = vertices.ToArray() },
-                //        new DefaultTriangulationCell<TVector>() {Vertices = }
-                //    };
-                //}
-                //else
-                //{
-                //    triangles = new List<DefaultTriangulationCell<TVector>>() { new DefaultTriangulationCell<TVector>() { Vertices = vertices.ToArray() } };
-                //}
-            }
-            else
-            {
-                var triangulation = Triangulation.CreateDelaunay(vertices);
-                triangles = triangulation.Cells;
-            }
-
-            return triangles;
-        }
-
-        private int GetDimension<TInVector>(List<TInVector> vertices) where TInVector : IVector
+        private int GetDimension<TInVector>(List<TInVector> vertices) where TInVector : IVertex
         {
             int minDimension = int.MaxValue;
             int maxDimension = int.MinValue;
