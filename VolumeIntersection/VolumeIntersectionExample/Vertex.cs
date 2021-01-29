@@ -7,7 +7,7 @@ using VolumeIntersection;
 
 namespace VolumeIntersectionExample
 {
-    class Vertex : IVector
+    class Vertex : IIndexedVertex
     {
         public double[] Position { get; set; }
 
