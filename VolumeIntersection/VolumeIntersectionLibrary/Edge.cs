@@ -12,11 +12,12 @@ namespace VolumeIntersection
     {
         /// <summary>
         /// Normal of this half space.
+        /// It has to point inside the source cell.
         /// </summary>
         public TVector Normal { get; set; }
 
         /// <summary>
-        /// Right side of the standard form of this half space.
+        /// Constant element of the standard form of this half space.
         /// </summary>
         public float C { get; set; }
 

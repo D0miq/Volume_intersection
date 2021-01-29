@@ -3,10 +3,13 @@ using System.Numerics;
 
 namespace VolumeIntersection
 {
+    /// <summary>
+    /// Three dimensional volumetric cell.
+    /// </summary>
     public class Cell3D : Cell<Vector3, Edge3D>
     {
         /// <summary>
-        /// Creates a new cell
+        /// Creates a new 3D cell.
         /// </summary>
         public Cell3D()
         {
@@ -20,7 +23,7 @@ namespace VolumeIntersection
         /// <returns>True - cell contains the point, false otherwise.</returns>
         public override bool Contains(Vector3 point)
         {
-            return base.Contains((edge) => Vector3.Dot(edge.Normal, point) - edge.C);
+            return base.Contains((edge) => Vector3.Dot(edge.Normal, point) + edge.C);
         }
     }
 }

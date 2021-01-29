@@ -1,9 +1,6 @@
-﻿using MathNet.Numerics.LinearAlgebra;
-using MIConvexHull;
+﻿using MIConvexHull;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 
 namespace VolumeIntersection
 {
@@ -35,16 +32,31 @@ namespace VolumeIntersection
             }
         }
 
+        protected int Dimension;
+
+        /// <summary>
+        /// Removes redundant half spaces and creates a minimal intersection of two cells.
+        /// </summary>
+        /// <param name="c1">First cell.</param>
+        /// <param name="c2">Second cell.</param>
+        /// <param name="intersectionPoints">Intersection points.</param>
+        /// <returns>List of half spaces.</returns>
         protected abstract List<TEdge> RemoveHalfSpaces(TCell c1, TCell c2, out List<TVector> intersectionPoints);
 
+        /// <summary>
+        /// Finds centroid of a cell.
+        /// </summary>
+        /// <param name="vertices">Vertices of the cell.</param>
+        /// <param name="cell">The cell.</param>
         protected abstract void FindCentroid(List<TVector> vertices, TCell cell);
 
         /// <summary>
         /// Finds intersection between triangulation (tetrahedralization) and voronoi diagram.
         /// Method starts traversing from a random triangle (tetrahedron) and checks for different components of a triangulation (tetrahedralization).
         /// </summary>
-        /// <typeparam name="TVector">Type of a used vector.</typeparam>
-        /// <typeparam name="TCell">Type of a used triangle (tetrahedron).</typeparam>
+        /// <typeparam name="TInVector">Type of an input vector.</typeparam>
+        /// <typeparam name="TInCell">Type of a triangle (tetrahedron).</typeparam>
+        /// <typeparam name="TIndexedVector">Type of an indexed vector used for voronoi generators.</typeparam>
         /// <param name="vertices">Vertices of a triangulation (tetrahedralization).</param>
         /// <param name="cells">Cells of a triangulation (tetrahedralization).</param>
         /// <param name="generators">Voronoi generators.</param>
@@ -55,7 +67,7 @@ namespace VolumeIntersection
             var triangleDimension = this.GetDimension(vertices);
             var voronoiDimension = this.GetDimension(generators);
 
-            if (triangleDimension != 2 || voronoiDimension != 2)
+            if (triangleDimension != this.Dimension || voronoiDimension != this.Dimension)
             {
                 throw new ArgumentException("Triangulation vertices and voronoi generators must have the same dimension.");
             }
@@ -142,8 +154,8 @@ namespace VolumeIntersection
                 tempFirstCell.Visited = true;
                 tempSecondCell.Visited = true;
 
-                List<TVector> intersectingPoints;
-                var edges = RemoveHalfSpaces(tempFirstCell, tempSecondCell, out intersectingPoints);
+                List<TVector> intersectionPoints;
+                var edges = RemoveHalfSpaces(tempFirstCell, tempSecondCell, out intersectionPoints);
 
                 foreach (var edge in edges)
                 {
@@ -175,11 +187,11 @@ namespace VolumeIntersection
 
                 try
                 {
-                    FindCentroid(intersectingPoints, cell);
+                    FindCentroid(intersectionPoints, cell);
                     intersections.Add(cell);
-                } catch(ConvexHullGenerationException)
+                } catch(ConvexHullGenerationException e)
                 {
-                    Console.WriteLine("Intersection is too small.");
+                    Console.WriteLine("Cannot compute centroid. " + e.Message);
                 }
             }
 

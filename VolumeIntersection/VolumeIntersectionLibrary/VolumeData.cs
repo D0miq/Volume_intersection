@@ -8,7 +8,7 @@ namespace VolumeIntersection
     /// <summary>
     /// Volumetric data.
     /// </summary>
-    /// <typeparam name="TVector">Vector type</typeparam>
+    /// <typeparam name="TVector">Vector type.</typeparam>
     public abstract class VolumeData<TVector, TCell, TEdge> where TCell : Cell<TVector, TEdge>, new() where TEdge : Edge<TVector, TCell>
     {
         /// <summary>
@@ -19,20 +19,55 @@ namespace VolumeIntersection
         /// <summary>
         /// Creates a copy of vertices.
         /// </summary>
-        /// <typeparam name="TVector"></typeparam>
-        /// <param name="vertices"></param>
-        /// <returns></returns>
-        protected abstract TVector[] CopyVertices<TInVector>(List<TInVector> vertices) where TInVector : IVertex;
+        /// <typeparam name="TInVertex">Type of input vertices.</typeparam>
+        /// <param name="vertices">Vertices.</param>
+        /// <returns>Vertices in internal format.</returns>
+        protected abstract TVector[] CopyVertices<TInVertex>(List<TInVertex> vertices) where TInVertex : IVertex;
 
+        /// <summary>
+        /// Computes a centroid of a cell defined by vertex indices.
+        /// </summary>
+        /// <param name="indices">Vertex indices.</param>
+        /// <param name="vertices">Vertices.</param>
+        /// <returns>The centroid.</returns>
         protected abstract TVector ComputeCentroid(int[] indices, TVector[] vertices);
 
+        /// <summary>
+        /// Computes an edge of a triangulation.
+        /// </summary>
+        /// <param name="vertices">Vertices of the triangulation.</param>
+        /// <param name="indices">Indices of an edge.</param>
+        /// <param name="cell">Cell that should contain the edge.</param>
+        /// <returns>Created edge.</returns>
         protected abstract TEdge ComputeTriangleEdge(TVector[] vertices, int[] indices, TCell cell);
 
-        protected abstract TCell AddCellToDictionary<TInVector>(TInVector generator, TCell[] cells) where TInVector : IIndexedVertex;
-
+        /// <summary>
+        /// Adds a cell to the provided array.
+        /// If the array already contains the cell this method returns it.
+        /// </summary>
+        /// <typeparam name="TInVector">Type of input vertices.</typeparam>
+        /// <param name="generator">Generator of a voronoi cell.</param>
+        /// <param name="cells">Cells dictionary.</param>
+        /// <returns>The cell.</returns>
+        protected abstract TCell AddCellToDictionary<TInVertex>(TInVertex generator, TCell[] cells) where TInVertex : IIndexedVertex;
+        
+        /// <summary>
+        /// Computes an edge of a voronoi diagram.
+        /// </summary>
+        /// <param name="sourcePosition">Position of a generator of a source cell.</param>
+        /// <param name="targetPosition">Position of a generator of a target cell.</param>
+        /// <param name="sourceCell">Source cell.</param>
+        /// <param name="targetCell">Target cel.</param>
         protected abstract void ComputeVoronoiEdge(double[] sourcePosition, double[] targetPosition, TCell sourceCell, TCell targetCell);
 
-        public void FromTriangulation<TInVector, TTriangleCell>(List<TInVector> vertices, List<TTriangleCell> cells) where TInVector : IVertex where TTriangleCell : ITriangleCell
+        /// <summary>
+        /// Creates cells of this volumetric data from a triangulation.
+        /// </summary>
+        /// <typeparam name="TInVertex">Type of input vertices.</typeparam>
+        /// <typeparam name="TTriangleCell">Type of a triangle cell.</typeparam>
+        /// <param name="vertices">Vertices.</param>
+        /// <param name="cells">Triangle cells.</param>
+        public void FromTriangulation<TInVertex, TTriangleCell>(List<TInVertex> vertices, List<TTriangleCell> cells) where TInVertex : IVertex where TTriangleCell : ITriangleCell
         {
             this.Cells = new List<TCell>(cells.Count);
 
@@ -53,7 +88,9 @@ namespace VolumeIntersection
                 // Create tetrahedron cell
                 var volumeCell = new TCell()
                 {
-                    Centroid = centroid
+                    Centroid = centroid,
+                    TriangleIndex = cellIndex,
+                    VoronoiIndex = -1
                 };
 
                 // Iterate over all faces of a cell and add them to volumetric data
@@ -87,11 +124,11 @@ namespace VolumeIntersection
         }
 
         /// <summary>
-        /// 
+        /// Creates cells of this volumetric data froma voronoi generators.
         /// </summary>
-        /// <typeparam name="TVector"></typeparam>
-        /// <param name="generators"></param>
-        public void FromVoronoi<TInVector>(List<TInVector> generators) where TInVector : IIndexedVertex
+        /// <typeparam name="TInVertex">Type of input vertices.</typeparam>
+        /// <param name="generators">Voronoi generators.</param>
+        public void FromVoronoi<TInVertex>(List<TInVertex> generators) where TInVertex : IIndexedVertex
         {
             var cells = new TCell[generators.Count];
 

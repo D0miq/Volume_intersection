@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace VolumeIntersection
 {
+    /// <summary>
+    /// Volumetric cell.
+    /// </summary>
+    /// <typeparam name="TVector">Vector type.</typeparam>
+    /// <typeparam name="TEdge">Edge type.</typeparam>
     public abstract class Cell<TVector, TEdge>
     {
         /// <summary>
@@ -35,12 +40,16 @@ namespace VolumeIntersection
         /// </summary>
         internal bool Visited { get; set; }
 
+        /// <summary>
+        /// Checks if this cell contains the provided point.
+        /// </summary>
+        /// <param name="point">Point that is checked.</param>
+        /// <returns>True - cell contains the point, false otherwise.</returns>
         public abstract bool Contains(TVector point);
 
         /// <summary>
-        /// Checks if this cell contains the provided direction function.
+        /// Checks if a result of the provided direction function is contained in this cell.
         /// </summary>
-        /// <param name="edges">The list of edges.</param>
         /// <param name="dirFunction">Direction function.</param>
         /// <returns>True - cell contains the point, false otherwise.</returns>
         protected bool Contains(Func<TEdge, float> dirFunction)

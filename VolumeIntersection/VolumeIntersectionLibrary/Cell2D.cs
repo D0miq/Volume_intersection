@@ -4,12 +4,12 @@ using System.Numerics;
 namespace VolumeIntersection
 {
     /// <summary>
-    /// Volume cell.
+    /// Two dimensional volumetric cell.
     /// </summary>
     public class Cell2D : Cell<Vector2, Edge2D>
     {
         /// <summary>
-        /// Creates a new cell
+        /// Creates a new 2D cell.
         /// </summary>
         public Cell2D()
         {
@@ -23,7 +23,7 @@ namespace VolumeIntersection
         /// <returns>True - cell contains the point, false otherwise.</returns>
         public override bool Contains(Vector2 point)
         {
-            return base.Contains((edge) => Vector2.Dot(edge.Normal, point) - edge.C);
+            return base.Contains((edge) => Vector2.Dot(edge.Normal, point) + edge.C);
         }
     }
 }

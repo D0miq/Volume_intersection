@@ -4,6 +4,9 @@ using System.Numerics;
 
 namespace VolumeIntersection
 {
+    /// <summary>
+    /// Comparer that compares two 3D vectors.
+    /// </summary>
     internal class Vector3Comparer : IEqualityComparer<Vector3>
     {
         /// <summary>

@@ -9,8 +9,25 @@ namespace VolumeIntersection
 {
     public class VolumeIntersection3D : VolumeIntersection<Vector3, Cell3D, Edge3D, VolumeData3D>
     {
+        public VolumeIntersection3D()
+        {
+            base.Dimension = 3;
+        }
+
+        /// <summary>
+        /// Removes redundant half spaces and creates a minimal intersection of two cells.
+        /// </summary>
+        /// <param name="c1">First cell.</param>
+        /// <param name="c2">Second cell.</param>
+        /// <param name="intersectionPoints">Intersection points.</param>
+        /// <returns>List of half spaces.</returns>
         protected override List<Edge3D> RemoveHalfSpaces(Cell3D c1, Cell3D c2, out List<Vector3> intersectionPoints)
         {
+            if(c1.TriangleIndex == 17457 && c2.VoronoiIndex == 637)
+            {
+                Console.WriteLine("");
+            }
+
             var usedHalfSpaces = new Dictionary<Edge3D, HashSet<Vector3>>();
             var usedIntersectingPoints = new HashSet<Vector3>(new Vector3Comparer());
 
@@ -24,8 +41,8 @@ namespace VolumeIntersection
                 {
                     for (int k = j + 1; k < halfSpaces.Count; k++)
                     {
-                        var intersectionPoint = FindIntersectionPoint(new List<Edge3D>() { halfSpaces[i], halfSpaces[j], halfSpaces[k] });
-                        var success = intersectionPoint.X != float.NaN && intersectionPoint.Y != float.NaN && intersectionPoint.Z != float.NaN;
+                        var intersectionPoint = FindIntersectionPoint(halfSpaces[i], halfSpaces[j], halfSpaces[k]);
+                        var success = !float.IsNaN(intersectionPoint.X) && !float.IsNaN(intersectionPoint.Y) && !float.IsNaN(intersectionPoint.Z);
 
                         if (success && c1.Contains(intersectionPoint) && c2.Contains(intersectionPoint))
                         {
@@ -74,10 +91,20 @@ namespace VolumeIntersection
                 usedHalfSpaces.Remove(pair.Key);
             }
 
+            if (usedHalfSpaces.Count < 4)
+            {
+                Console.WriteLine("");
+            }
+
             intersectionPoints = usedIntersectingPoints.ToList();
             return usedHalfSpaces.Keys.ToList();
         }
 
+        /// <summary>
+        /// Finds centroid of a cell.
+        /// </summary>
+        /// <param name="vertices">Vertices of the cell.</param>
+        /// <param name="cell">The cell.</param>
         protected override void FindCentroid(List<Vector3> vertices, Cell3D cell)
         {
             float areaSum = 0;
@@ -120,9 +147,16 @@ namespace VolumeIntersection
             cell.Centroid = centroid;
         }
 
-        private Vector3 FindIntersectionPoint(List<Edge3D> edges)
+        /// <summary>
+        /// Finds an intersection point of three edges.
+        /// </summary>
+        /// <param name="edge1">First edge.</param>
+        /// <param name="edge2">Second edge.</param>
+        /// <param name="edge3">Third edge.</param>
+        /// <returns>The intersection point.</returns>
+        private Vector3 FindIntersectionPoint(Edge3D edge1, Edge3D edge2, Edge3D edge3)
         {
-            // Compute half space standard form from vertices that generates it.
+            // Compute a standard form from vertices that generates it.
             // It can be calculated with a system of linear equations. I use determinant to do it.
             // Example of the calculation of a plane from three vertices:
             //  | i   j  k l |
@@ -145,25 +179,25 @@ namespace VolumeIntersection
             // | b3 c3 1 | | a3 c3 1 | | a3 b3 1 | | a3 b3 c3 |
 
 
-            var w = edges[0].Normal.X * ((edges[1].Normal.Y * edges[2].Normal.Z) - (edges[1].Normal.Z * edges[2].Normal.Y))
-                - edges[0].Normal.Y * ((edges[1].Normal.X * edges[2].Normal.Z) - (edges[1].Normal.Z * edges[2].Normal.X))
-                + edges[0].Normal.Z * ((edges[1].Normal.X * edges[2].Normal.Y) - (edges[1].Normal.Y * edges[2].Normal.X));
+            var w = -(edge1.Normal.X * ((edge2.Normal.Y * edge3.Normal.Z) - (edge2.Normal.Z * edge3.Normal.Y))
+                - edge1.Normal.Y * ((edge2.Normal.X * edge3.Normal.Z) - (edge2.Normal.Z * edge3.Normal.X))
+                + edge1.Normal.Z * ((edge2.Normal.X * edge3.Normal.Y) - (edge2.Normal.Y * edge3.Normal.X)));
 
             if (w != 0)
             {
                 return new Vector3(
-                // First coordinate
-                (edges[0].Normal.Y * ((edges[1].Normal.Z * edges[2].C) - (edges[1].C * edges[2].Normal.Z))
-                - edges[0].Normal.Z * ((edges[1].Normal.Y * edges[2].C) - (edges[1].C * edges[2].Normal.Y))
-                + edges[0].C * ((edges[1].Normal.Y * edges[2].Normal.Z) - (edges[1].Normal.Z * edges[2].Normal.Y))) / w,
-                // Second coordinate
-                (edges[0].Normal.X * ((edges[1].Normal.Z * edges[2].C) - (edges[1].C * edges[2].Normal.Z))
-                - edges[0].Normal.Z * ((edges[1].Normal.X * edges[2].C) - (edges[1].C * edges[2].Normal.X))
-                + edges[0].C * ((edges[1].Normal.X * edges[2].Normal.Z) - (edges[1].Normal.Z * edges[2].Normal.X))) / w,
-                // Third coordinate
-                (edges[0].Normal.X * ((edges[1].Normal.Y * edges[2].C) - (edges[1].C * edges[2].Normal.Y))
-                - edges[0].Normal.Y * ((edges[1].Normal.X * edges[2].C) - (edges[1].C * edges[2].Normal.X))
-                + edges[0].C * ((edges[1].Normal.X * edges[2].Normal.Y) - (edges[1].Normal.Y * edges[2].Normal.X))) / w
+                    // First coordinate
+                    (edge1.Normal.Y * ((edge2.Normal.Z * edge3.C) - (edge2.C * edge3.Normal.Z))
+                    - edge1.Normal.Z * ((edge2.Normal.Y * edge3.C) - (edge2.C * edge3.Normal.Y))
+                    + edge1.C * ((edge2.Normal.Y * edge3.Normal.Z) - (edge2.Normal.Z * edge3.Normal.Y))) / w,
+                    // Second coordinate
+                    -(edge1.Normal.X * ((edge2.Normal.Z * edge3.C) - (edge2.C * edge3.Normal.Z))
+                    - edge1.Normal.Z * ((edge2.Normal.X * edge3.C) - (edge2.C * edge3.Normal.X))
+                    + edge1.C * ((edge2.Normal.X * edge3.Normal.Z) - (edge2.Normal.Z * edge3.Normal.X))) / w,
+                    // Third coordinate
+                    (edge1.Normal.X * ((edge2.Normal.Y * edge3.C) - (edge2.C * edge3.Normal.Y))
+                    - edge1.Normal.Y * ((edge2.Normal.X * edge3.C) - (edge2.C * edge3.Normal.X))
+                    + edge1.C * ((edge2.Normal.X * edge3.Normal.Y) - (edge2.Normal.Y * edge3.Normal.X))) / w
                 );
             }
             else
@@ -179,7 +213,7 @@ namespace VolumeIntersection
             MIVertex[] miVertices = new MIVertex[vertices.Count];
             for (int i = 0; i < vertices.Count; i++)
             {
-                miVertices[i] = new MIVertex(vertices[i].X, vertices[i].Y);
+                miVertices[i] = new MIVertex(vertices[i].X, vertices[i].Y, vertices[i].Z);
             }
 
             if (vertices.Count == 4)

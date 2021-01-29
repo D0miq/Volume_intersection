@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
 
 namespace VolumeIntersection
 {
+    /// <summary>
+    /// Comparer that compares two 2D vectors.
+    /// </summary>
     internal class Vector2Comparer : IEqualityComparer<Vector2>
     {
         /// <summary>

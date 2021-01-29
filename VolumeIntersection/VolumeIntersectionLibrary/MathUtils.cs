@@ -8,7 +8,7 @@
         /// <summary>
         /// Eps used for eps tests.
         /// </summary>
-        public const double Eps = 1E-10;
+        public const float Eps = 1E-7F;
 
         /// <summary>
         /// Remaps value from one interval to another.
@@ -19,7 +19,7 @@
         /// <param name="low2">Low limit of the second interval.</param>
         /// <param name="high2">High limit of the second interval.</param>
         /// <returns>Remapped value.</returns>
-        public static double Remap(double value, double low1, double high1, double low2, double high2)
+        public static float Remap(float value, float low1, float high1, float low2, float high2)
         {
             return low2 + (value - low1) * (high2 - low2) / (high1 - low1);
         }

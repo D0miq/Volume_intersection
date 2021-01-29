@@ -9,6 +9,18 @@ namespace VolumeIntersection
 {
     public class VolumeIntersection2D : VolumeIntersection<Vector2, Cell2D, Edge2D, VolumeData2D>
     {
+        public VolumeIntersection2D()
+        {
+            base.Dimension = 2;
+        }
+
+        /// <summary>
+        /// Removes redundant half spaces and creates a minimal intersection of two cells.
+        /// </summary>
+        /// <param name="c1">First cell.</param>
+        /// <param name="c2">Second cell.</param>
+        /// <param name="intersectionPoints">Intersection points.</param>
+        /// <returns>List of half spaces.</returns>
         protected override List<Edge2D> RemoveHalfSpaces(Cell2D c1, Cell2D c2, out List<Vector2> intersectionPoints)
         {
             var usedHalfSpaces = new Dictionary<Edge2D, HashSet<Vector2>>();
@@ -22,8 +34,8 @@ namespace VolumeIntersection
             {
                 for (int j = i + 1; j < halfSpaces.Count; j++)
                 {
-                    var intersectionPoint = FindIntersectionPoint(new List<Edge2D>() { halfSpaces[i], halfSpaces[j] });
-                    var success = intersectionPoint.X != float.NaN && intersectionPoint.Y != float.NaN;
+                    var intersectionPoint = FindIntersectionPoint(halfSpaces[i], halfSpaces[j]);
+                    var success = !float.IsNaN(intersectionPoint.X) && !float.IsNaN(intersectionPoint.Y);
 
                     if (success && c1.Contains(intersectionPoint) && c2.Contains(intersectionPoint))
                     {
@@ -64,6 +76,11 @@ namespace VolumeIntersection
             return usedHalfSpaces.Keys.ToList();
         }
 
+        /// <summary>
+        /// Finds centroid of a cell.
+        /// </summary>
+        /// <param name="vertices">Vertices of the cell.</param>
+        /// <param name="cell">The cell.</param>
         protected override void FindCentroid(List<Vector2> vertices, Cell2D cell)
         {
             float areaSum = 0;
@@ -95,19 +112,33 @@ namespace VolumeIntersection
             cell.Centroid = centroid;
         }
 
-        private Vector2 FindIntersectionPoint(List<Edge2D> edges)
+        /// <summary>
+        /// Finds an intersection point of two lines.
+        /// </summary>
+        /// <param name="edge1">First edge (line).</param>
+        /// <param name="edge2">Second edge (line).</param>
+        /// <returns>The intersection point</returns>
+        private Vector2 FindIntersectionPoint(Edge2D edge1, Edge2D edge2)
         {
-            var w = (edges[0].Normal.X * edges[1].Normal.Y) - (edges[0].Normal.Y * edges[1].Normal.X);
+            var w = (edge1.Normal.X * edge2.Normal.Y) - (edge1.Normal.Y * edge2.Normal.X);
 
-            if(w != 0)
+            if (w != 0)
             {
                 return new Vector2(
-                ((edges[0].Normal.Y * edges[1].C) - (edges[0].C * edges[1].Normal.Y)) / w,
-                ((edges[0].Normal.X * edges[1].C) - (edges[0].C * edges[1].Normal.X)) / w);
-            } else
+                ((edge1.Normal.Y * edge2.C) - (edge1.C * edge2.Normal.Y)) / w,
+                -((edge1.Normal.X * edge2.C) - (edge1.C * edge2.Normal.X)) / w);
+            }
+            else
             {
                 return new Vector2(float.NaN);
             }
+
+            //var edge1Vec = new Vector3(edge1.Normal.X, edge1.Normal.Y, edge1.C);
+            //var edge2Vec = new Vector3(edge2.Normal.X, edge2.Normal.Y, edge2.C);
+
+            //var cross = Vector3.Cross(edge1Vec, edge2Vec);
+
+            //return cross.Z != 0 ? new Vector2(cross.X / cross.Z, cross.Y / cross.Z) : new Vector2(float.NaN);
         }
 
         private IEnumerable<DefaultTriangulationCell<MIVertex>> Triangulate(List<Vector2> vertices)
