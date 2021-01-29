@@ -7,9 +7,9 @@ using System.Numerics;
 
 namespace VolumeIntersection
 {
-    public class VolumeIntersection<TVolumeData>
+    public abstract class VolumeIntersection<TVector, TCell, TEdge, TVolumeData> where TVolumeData : VolumeData<TVector, TCell, TEdge>, new() where TCell : Cell<TVector, TEdge>, new() where TEdge : Edge<TVector, TCell>
     {
-        private class Pair<TCell>
+        private class Pair
         {
             public TCell FirstCell;
             public TCell SecondCell;
@@ -22,7 +22,7 @@ namespace VolumeIntersection
 
             public override bool Equals(object obj)
             {
-                return obj is Pair<TCell> pair &&
+                return obj is Pair pair &&
                        FirstCell == pair.FirstCell && SecondCell == pair.SecondCell;
             }
 
@@ -35,27 +35,9 @@ namespace VolumeIntersection
             }
         }
 
-        public TVolumeData Intersect<TVector, TCell, TIndexedVector>(List<TVector> vertices, List<TCell> cells, List<TIndexedVector> generators) where TVector : IVector where TCell : ITriangleCell where TIndexedVector : IIndexedVector
-        {
-            // Test dimensions
-            var triangleDimension = this.GetDimension(vertices);
-            var voronoiDimension = this.GetDimension(generators);
+        protected abstract void RemoveHalfSpaces();
 
-            if (triangleDimension != 2 || voronoiDimension != 2)
-            {
-                throw new ArgumentException("Triangulation vertices and voronoi generators must have the same dimension.");
-            }
-
-            TVolumeData triangulationData = ;
-            TVolumeData voronoiData = ;
-
-            TVolumeData volumeData = ;
-        }
-
-
-
-
-
+        protected abstract void FindCentroid(List<TVector> vertices, TCell cell);
 
         /// <summary>
         /// Finds intersection between triangulation (tetrahedralization) and voronoi diagram.
@@ -67,30 +49,28 @@ namespace VolumeIntersection
         /// <param name="cells">Cells of a triangulation (tetrahedralization).</param>
         /// <param name="generators">Voronoi generators.</param>
         /// <returns>Volumetric data with intersections.</returns>
-        public VolumeData2D Intersect2D<TVector, TCell, TIndexedVector>(List<TVector> vertices, List<TCell> cells, List<TIndexedVector> generators) where TVector : IVector where TCell : ITriangleCell where TIndexedVector : IIndexedVector
+        public TVolumeData Intersect<TInVector, TInCell, TIndexedVector>(List<TInVector> vertices, List<TInCell> cells, List<TIndexedVector> generators) where TInVector : IVector where TInCell : ITriangleCell where TIndexedVector : IIndexedVector
         {
             // Test dimensions
             var triangleDimension = this.GetDimension(vertices);
             var voronoiDimension = this.GetDimension(generators);
 
-            if(triangleDimension != 2 || voronoiDimension != 2)
+            if (triangleDimension != 2 || voronoiDimension != 2)
             {
                 throw new ArgumentException("Triangulation vertices and voronoi generators must have the same dimension.");
             }
 
-            // Create volumetric data from triangulation and voronoi diagram
-            var triangulationVolumeData = new VolumeData2D();
-            triangulationVolumeData.FromTriangulation(vertices, cells);
+            var triangulationData = new TVolumeData();
+            triangulationData.FromTriangulation(vertices, cells);
 
-            var voronoiVolumeData = new VolumeData2D();
-            voronoiVolumeData.FromVoronoi(generators);
+            var voronoiData = new TVolumeData();
+            voronoiData.FromVoronoi(generators);
 
-            // Create volumetric data for an intersection between the triangulation and voronoi diagram
-            var volumeData = new VolumeData2D();
+            var volumeData = new TVolumeData();
 
-            for (int i = 0; i < triangulationVolumeData.Cells.Count; i++)
+            for (int i = 0; i < triangulationData.Cells.Count; i++)
             {
-                var triangulationCell = triangulationVolumeData.Cells[i];
+                var triangulationCell = triangulationData.Cells[i];
 
                 if (triangulationCell.Visited)
                 {
@@ -98,49 +78,7 @@ namespace VolumeIntersection
                 }
 
                 // Find voronoi cell that contains centroid of the triangulation cell
-                var voronoiCell = voronoiVolumeData.Cells.Find(cell => cell.Contains(triangulationCell.Centroid));
-
-                // Find intersection between all traversable cells and their neighbors
-                var intersections = FindIntersectingCells(triangulationCell, voronoiCell);
-
-                volumeData.Cells.AddRange(intersections);
-            }
-
-            return volumeData;
-        }
-
-        public VolumeData3D Intersect3D<TVector, TCell, TIndexedVector>(List<TVector> vertices, List<TCell> cells, List<TIndexedVector> generators) where TVector : IVector where TCell : ITriangleCell where TIndexedVector : IIndexedVector
-        {
-            // Test dimensions
-            var triangleDimension = this.GetDimension(vertices);
-            var voronoiDimension = this.GetDimension(generators);
-
-            if (triangleDimension != 3 || voronoiDimension != 3)
-            {
-                throw new ArgumentException("Triangulation vertices and voronoi generators must have the same dimension.");
-            }
-
-            // Create volumetric data from triangulation and voronoi diagram
-            var triangulationVolumeData = new VolumeData3D();
-            triangulationVolumeData.FromTriangulation(vertices, cells);
-
-            var voronoiVolumeData = new VolumeData3D();
-            voronoiVolumeData.FromVoronoi(generators);
-
-            // Create volumetric data for an intersection between the triangulation and voronoi diagram
-            var volumeData = new VolumeData3D();
-
-            for (int i = 0; i < triangulationVolumeData.Cells.Count; i++)
-            {
-                var triangulationCell = triangulationVolumeData.Cells[i];
-
-                if (triangulationCell.Visited)
-                {
-                    continue;
-                }
-
-                // Find voronoi cell that contains centroid of the triangulation cell
-                var voronoiCell = voronoiVolumeData.Cells.Find(cell => cell.Contains(triangulationCell.Centroid));
+                var voronoiCell = voronoiData.Cells.Find(cell => cell.Contains(triangulationCell.Centroid));
 
                 // Find intersection between all traversable cells and their neighbors
                 var intersections = FindIntersectingCells(triangulationCell, voronoiCell);
@@ -182,15 +120,15 @@ namespace VolumeIntersection
         //    };
         //}
 
-        private List<Cell2D> FindIntersectingCells(Cell2D triangleCell, Cell2D voronoiCellIndex)
+        private List<TCell> FindIntersectingCells(TCell triangleCell, TCell voronoiCellIndex)
         { 
-            var intersections = new List<Cell2D>();
+            var intersections = new List<TCell>();
 
             // Create a queue
-            var visitedPairs = new HashSet<Pair<Cell2D>>();
-            var cellQueue = new Queue<Pair<Cell2D>>();
+            var visitedPairs = new HashSet<Pair>();
+            var cellQueue = new Queue<Pair>();
 
-            var pair = new Pair<Cell2D>(triangleCell, voronoiCellIndex);
+            var pair = new Pair(triangleCell, voronoiCellIndex);
             visitedPairs.Add(pair);
             cellQueue.Enqueue(pair);
 
@@ -204,7 +142,7 @@ namespace VolumeIntersection
                 tempFirstCell.Visited = true;
                 tempSecondCell.Visited = true;
 
-                List<Vector2> intersectingPoints;
+                List<TVector> intersectingPoints;
                 var edges = RemoveHalfSpaces(tempFirstCell, tempSecondCell, out intersectingPoints);
 
                 foreach (var edge in edges)
@@ -213,11 +151,11 @@ namespace VolumeIntersection
                     {
                         if (edge.Source == tempFirstCell)
                         {
-                            pair = new Pair<Cell2D>(edge.Target, tempSecondCell);
+                            pair = new Pair(edge.Target, tempSecondCell);
                         }
                         else if (edge.Source == tempSecondCell)
                         {
-                            pair = new Pair<Cell2D>(tempFirstCell, edge.Target);
+                            pair = new Pair(tempFirstCell, edge.Target);
                         }
 
                         if (visitedPairs.Add(pair))
@@ -227,7 +165,7 @@ namespace VolumeIntersection
                     }
                 }
 
-                var cell = new Cell2D()
+                var cell = new TCell()
                 {
                     Edges = edges,
                 };
@@ -248,79 +186,12 @@ namespace VolumeIntersection
             return intersections;
         }
 
-        private void FindCentroid(List<TVector> vertices, Cell2D<TVector> cell)
+        private List<TEdge> RemoveHalfSpaces(TCell c1, TCell c2, out List<TVector> intersectionPoints)
         {
-            double areaSum = 0;
-
-            double[] centroid = new double[this.dimension];
-
-            var triangles = this.Triangulate(vertices);
-            
-            foreach (var triangle in triangles)
-            {
-                double area = 0;
-
-                double[][] triangleEdges = new double[triangle.Vertices.Length - 1][];
-
-                var vertexPosition = triangle.Vertices[0].Position;
-
-                int index = 0;
-
-                for (int i = 1; i < triangle.Vertices.Length; i++)
-                {
-                    triangleEdges[index] = new double[this.dimension];
-                    var nextVertexPosition = triangle.Vertices[i].Position;
-                    for (int j = 0; j < this.dimension; j++)
-                    {
-                        triangleEdges[index][j] = nextVertexPosition[j] - vertexPosition[j];
-                    }
-
-                    index++;
-                }
-
-                if (this.dimension == 2)
-                {
-                    area = Math.Abs(MathUtils.Determinant(triangleEdges)) / 2;
-                }
-                else if (this.dimension == 3)
-                {
-                    area = Math.Abs(MathUtils.Determinant(triangleEdges)) / 6;
-                }
-
-                // Compute centroid of the triangle
-                for (int i = 0; i < centroid.Length; i++)
-                {
-                    double sum = 0;
-                    for (int j = 0; j < triangle.Vertices.Length; j++)
-                    {
-                        sum += triangle.Vertices[j].Position[i];
-                    }
-
-                    centroid[i] = sum / triangle.Vertices.Length * area;
-                }
-
-                areaSum += area;
-            }
-
-            // Compute centroid of the triangle
-            for (int i = 0; i < centroid.Length; i++)
-            {
-                centroid[i] /= areaSum;
-            }
-
-            cell.Weight = areaSum;
-            cell.Centroid = new TVector()
-            {
-                Position = centroid
-            };
-        }
-
-        private List<Edge2D> RemoveHalfSpaces(Cell2D c1, Cell2D c2, out List<TVector> intersectionPoints)
-        {
-            var usedHalfSpaces = new Dictionary<Edge2D<TVector>, HashSet<TVector>>();
+            var usedHalfSpaces = new Dictionary<TEdge, HashSet<TVector>>();
             var usedIntersectingPoints = new HashSet<TVector>(new VectorComparer<TVector>());
 
-            var halfSpaces = new List<Edge2D<TVector>>(c1.Edges.Count + c2.Edges.Count);
+            var halfSpaces = new List<TEdge>(c1.Edges.Count + c2.Edges.Count);
             halfSpaces.AddRange(c1.Edges);
             halfSpaces.AddRange(c2.Edges);
 
@@ -427,7 +298,7 @@ namespace VolumeIntersection
             return usedHalfSpaces.Keys.ToList();
         }
 
-        private bool FindIntersectionPoint(List<Edge2D<TVector>> edges, out TVector intersection)
+        private bool FindIntersectionPoint(List<TEdge> edges, out TVector intersection)
         {
             //double[][] vectors = new double[edges.Count][];
 
@@ -506,7 +377,7 @@ namespace VolumeIntersection
             return triangles;
         }
 
-        private int GetDimension<TVector>(List<TVector> vertices) where TVector : IVector
+        private int GetDimension<TInVector>(List<TInVector> vertices) where TInVector : IVector
         {
             int minDimension = int.MaxValue;
             int maxDimension = int.MinValue;
