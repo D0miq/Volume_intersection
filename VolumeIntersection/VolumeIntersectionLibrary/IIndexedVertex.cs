@@ -1,10 +1,11 @@
-﻿using System;
+﻿using MIConvexHull;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace VolumeIntersection
 {
-    public interface IIndexedVector : IVector
+    public interface IIndexedVertex : IVertex
     {
         /// <summary>
         /// Gets index of this vector.

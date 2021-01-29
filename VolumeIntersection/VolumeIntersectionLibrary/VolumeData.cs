@@ -22,17 +22,17 @@ namespace VolumeIntersection
         /// <typeparam name="TVector"></typeparam>
         /// <param name="vertices"></param>
         /// <returns></returns>
-        protected abstract TVector[] CopyVertices<TInVector>(List<TInVector> vertices) where TInVector : IVector;
+        protected abstract TVector[] CopyVertices<TInVector>(List<TInVector> vertices) where TInVector : IVertex;
 
         protected abstract TVector ComputeCentroid(int[] indices, TVector[] vertices);
 
         protected abstract TEdge ComputeTriangleEdge(TVector[] vertices, int[] indices, TCell cell);
 
-        protected abstract TCell AddCellToDictionary<TInVector>(TInVector generator, TCell[] cells) where TInVector : IIndexedVector;
+        protected abstract TCell AddCellToDictionary<TInVector>(TInVector generator, TCell[] cells) where TInVector : IIndexedVertex;
 
         protected abstract void ComputeVoronoiEdge(double[] sourcePosition, double[] targetPosition, TCell sourceCell, TCell targetCell);
 
-        public void FromTriangulation<TInVector, TTriangleCell>(List<TInVector> vertices, List<TTriangleCell> cells) where TInVector : IVector where TTriangleCell : ITriangleCell
+        public void FromTriangulation<TInVector, TTriangleCell>(List<TInVector> vertices, List<TTriangleCell> cells) where TInVector : IVertex where TTriangleCell : ITriangleCell
         {
             this.Cells = new List<TCell>(cells.Count);
 
@@ -91,7 +91,7 @@ namespace VolumeIntersection
         /// </summary>
         /// <typeparam name="TVector"></typeparam>
         /// <param name="generators"></param>
-        public void FromVoronoi<TInVector>(List<TInVector> generators) where TInVector : IIndexedVector
+        public void FromVoronoi<TInVector>(List<TInVector> generators) where TInVector : IIndexedVertex
         {
             var cells = new TCell[generators.Count];
 
