@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Numerics;
 
 namespace VolumeIntersection
 {
     /// <summary>
     /// Two dimensional volumetric cell.
     /// </summary>
-    public class Cell2D : Cell<Vector2, Edge2D>
+    public class Cell2D : Cell<Vector2D, Edge2D>
     {
         /// <summary>
         /// Creates a new 2D cell.
@@ -21,9 +20,9 @@ namespace VolumeIntersection
         /// </summary>
         /// <param name="point">The point.</param>
         /// <returns>True - cell contains the point, false otherwise.</returns>
-        public override bool Contains(Vector2 point)
+        public override bool Contains(Vector2D point)
         {
-            return base.Contains((edge) => Vector2.Dot(edge.Normal, point) + edge.C);
+            return base.Contains((edge) => edge.Normal.Dot(point) + edge.C);
         }
     }
 }

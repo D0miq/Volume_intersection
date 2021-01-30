@@ -18,7 +18,7 @@ namespace VolumeIntersection
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        public MIVertex(float x, float y)
+        public MIVertex(double x, double y)
         {
             Position = new double[] { x, y };
         }
@@ -29,7 +29,7 @@ namespace VolumeIntersection
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
         /// <param name="z">Z coordinate.</param>
-        public MIVertex(float x, float y, float z)
+        public MIVertex(double x, double y, double z)
         {
             Position = new double[] { x, y, z };
         }

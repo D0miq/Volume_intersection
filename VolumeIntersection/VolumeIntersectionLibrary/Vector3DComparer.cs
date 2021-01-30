@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Numerics;
 
 namespace VolumeIntersection
 {
     /// <summary>
     /// Comparer that compares two 3D vectors.
     /// </summary>
-    internal class Vector3Comparer : IEqualityComparer<Vector3>
+    internal class Vector3DComparer : IEqualityComparer<Vector3D>
     {
         /// <summary>
         /// Compares two vectors. Two vectors are equals when their coordinates are within a treshold.
@@ -15,7 +14,7 @@ namespace VolumeIntersection
         /// <param name="x">First vector.</param>
         /// <param name="y">Second vector.</param>
         /// <returns>True - vectors are equals, false otherwise.</returns>
-        public bool Equals(Vector3 x, Vector3 y)
+        public bool Equals(Vector3D x, Vector3D y)
         {
             return Math.Abs(x.X - y.X) < MathUtils.Eps && Math.Abs(x.Y - y.Y) < MathUtils.Eps && Math.Abs(x.Z - y.Z) < MathUtils.Eps;
         }
@@ -25,14 +24,12 @@ namespace VolumeIntersection
         /// </summary>
         /// <param name="obj">The vector.</param>
         /// <returns>The hash code.</returns>
-        public int GetHashCode(Vector3 obj)
+        public int GetHashCode(Vector3D obj)
         {
-            if (obj == null) throw new ArgumentNullException("Object cannot be null.");
-
             int hash = 17;
-            hash += hash * 23 + EqualityComparer<float>.Default.GetHashCode(obj.X);
-            hash += hash * 23 + EqualityComparer<float>.Default.GetHashCode(obj.Y);
-            hash += hash * 23 + EqualityComparer<float>.Default.GetHashCode(obj.Z);
+            hash += hash * 23 + obj.X.GetHashCode();
+            hash += hash * 23 + obj.Y.GetHashCode();
+            hash += hash * 23 + obj.Z.GetHashCode();
             return hash;
         }
     }

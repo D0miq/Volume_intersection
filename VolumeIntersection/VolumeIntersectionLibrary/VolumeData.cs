@@ -9,6 +9,8 @@ namespace VolumeIntersection
     /// Volumetric data.
     /// </summary>
     /// <typeparam name="TVector">Vector type.</typeparam>
+    /// <typeparam name="TCell">Cell type.</typeparam>
+    /// <typeparam name="TEdge">Edge type.</typeparam>
     public abstract class VolumeData<TVector, TCell, TEdge> where TCell : Cell<TVector, TEdge>, new() where TEdge : Edge<TVector, TCell>
     {
         /// <summary>
@@ -73,13 +75,14 @@ namespace VolumeIntersection
 
             var edgeDictionary = new Dictionary<int[], TEdge>(new EdgeComparer());
 
+            // Create a copy of vertices in a case the implementation of TInVertex creates a copy of its coordinates. It should make it easier for garbage collector.
             var vertexArray = this.CopyVertices(vertices);
 
             for (var cellIndex = 0; cellIndex < cells.Count; cellIndex++)
             {
                 var cell = cells[cellIndex];
 
-                // Save indices of the cell
+                // Save indices of the cell, cell might create a copy when the get is called.
                 var cellIndices = cell.Indices;
 
                 // Compute centroid of the cell
@@ -93,21 +96,23 @@ namespace VolumeIntersection
                     VoronoiIndex = -1
                 };
 
-                // Iterate over all faces of a cell and add them to volumetric data
+                // Iterate over all faces of a triangle (tetrahedron) and add them to volumetric data
                 for (int i = 0; i < cellIndices.Length; i++)
                 {
-                    // Get a triangle face from the tetrahedron
+                    // Get an edge or face from the triangle or tetrahedron
                     int[] edgeIndices = new int[cellIndices.Length - 1];
                     for (int j = 0; j < edgeIndices.Length; j++)
                     {
                         edgeIndices[j] = cellIndices[(i + j) % cellIndices.Length];
                     }
 
+                    // Compute edge
                     var edge = this.ComputeTriangleEdge(vertexArray, edgeIndices, volumeCell);
 
+                    // Sort indices of the edge. It is easier to compare them inside the dictionary.
                     Array.Sort(edgeIndices);
 
-                    // If dictionary contained the face before add neighbors
+                    // If the dictionary already contains the face, add neighbors.
                     if (edgeDictionary.TryGetValue(edgeIndices, out TEdge neighborEdge))
                     {
                         edge.Target = neighborEdge.Source;

@@ -2,13 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
-using System.Text;
 
 namespace VolumeIntersection
 {
-    public class VolumeIntersection3D : VolumeIntersection<Vector3, Cell3D, Edge3D, VolumeData3D>
+    /// <summary>
+    /// Class that computes intersections between three dimensional triangulation and voronoi diagram.
+    /// </summary>
+    public class VolumeIntersection3D : VolumeIntersection<Vector3D, Cell3D, Edge3D, VolumeData3D>
     {
+        /// <summary>
+        /// Creates a new instance of the class.
+        /// </summary>
         public VolumeIntersection3D()
         {
             base.Dimension = 3;
@@ -21,38 +25,42 @@ namespace VolumeIntersection
         /// <param name="c2">Second cell.</param>
         /// <param name="intersectionPoints">Intersection points.</param>
         /// <returns>List of half spaces.</returns>
-        protected override List<Edge3D> RemoveHalfSpaces(Cell3D c1, Cell3D c2, out List<Vector3> intersectionPoints)
+        protected override List<Edge3D> RemoveHalfSpaces(Cell3D c1, Cell3D c2, out List<Vector3D> intersectionPoints)
         {
-            if(c1.TriangleIndex == 17457 && c2.VoronoiIndex == 637)
-            {
-                Console.WriteLine("");
-            }
+            // Dictionary that saves intersection points for each edge.
+            var usedHalfSpaces = new Dictionary<Edge3D, HashSet<Vector3D>>();
 
-            var usedHalfSpaces = new Dictionary<Edge3D, HashSet<Vector3>>();
-            var usedIntersectingPoints = new HashSet<Vector3>(new Vector3Comparer());
+            // Distinct points (multiple edges can intersect in the same point and it would be bad later during a triangulation of the intersection).
+            var usedIntersectingPoints = new HashSet<Vector3D>(new Vector3DComparer());
 
+            // Save edges to a single list
             var halfSpaces = new List<Edge3D>(c1.Edges.Count + c2.Edges.Count);
             halfSpaces.AddRange(c1.Edges);
             halfSpaces.AddRange(c2.Edges);
 
+            // Test edges with each other
             for (int i = 0; i < halfSpaces.Count; i++)
             {
                 for (int j = i + 1; j < halfSpaces.Count; j++)
                 {
                     for (int k = j + 1; k < halfSpaces.Count; k++)
                     {
+                        // Find intersection point of three planes
                         var intersectionPoint = FindIntersectionPoint(halfSpaces[i], halfSpaces[j], halfSpaces[k]);
-                        var success = !float.IsNaN(intersectionPoint.X) && !float.IsNaN(intersectionPoint.Y) && !float.IsNaN(intersectionPoint.Z);
 
+                        // Check if the intersection point makes sense
+                        var success = !double.IsNaN(intersectionPoint.X) && !double.IsNaN(intersectionPoint.Y) && !double.IsNaN(intersectionPoint.Z);
+
+                        // If the point is inside both cells add it to the dictionary
                         if (success && c1.Contains(intersectionPoint) && c2.Contains(intersectionPoint))
                         {
-                            if (usedHalfSpaces.TryGetValue(halfSpaces[i], out HashSet<Vector3> vertices))
+                            if (usedHalfSpaces.TryGetValue(halfSpaces[i], out HashSet<Vector3D> vertices))
                             {
                                 vertices.Add(intersectionPoint);
                             }
                             else
                             {
-                                var newVertices = new HashSet<Vector3>(new Vector3Comparer());
+                                var newVertices = new HashSet<Vector3D>(new Vector3DComparer());
                                 newVertices.Add(intersectionPoint);
                                 usedHalfSpaces.Add(halfSpaces[i], newVertices);
                             }
@@ -63,7 +71,7 @@ namespace VolumeIntersection
                             }
                             else
                             {
-                                var newVertices = new HashSet<Vector3>(new Vector3Comparer());
+                                var newVertices = new HashSet<Vector3D>(new Vector3DComparer());
                                 newVertices.Add(intersectionPoint);
                                 usedHalfSpaces.Add(halfSpaces[j], newVertices);
                             }
@@ -74,7 +82,7 @@ namespace VolumeIntersection
                             }
                             else
                             {
-                                var newVertices = new HashSet<Vector3>(new Vector3Comparer());
+                                var newVertices = new HashSet<Vector3D>(new Vector3DComparer());
                                 newVertices.Add(intersectionPoint);
                                 usedHalfSpaces.Add(halfSpaces[k], newVertices);
                             }
@@ -85,15 +93,12 @@ namespace VolumeIntersection
                 }
             }
 
+            // Smallest edge in 3D is a triangle. Everything with less than three vertices is redundant. 
+            // The intersection can be defined without them. So they must be deleted.
             var toRemove = usedHalfSpaces.Where(pair => pair.Value.Count < 3).ToList();
             foreach (var pair in toRemove)
             {
                 usedHalfSpaces.Remove(pair.Key);
-            }
-
-            if (usedHalfSpaces.Count < 4)
-            {
-                Console.WriteLine("");
             }
 
             intersectionPoints = usedIntersectingPoints.ToList();
@@ -105,37 +110,39 @@ namespace VolumeIntersection
         /// </summary>
         /// <param name="vertices">Vertices of the cell.</param>
         /// <param name="cell">The cell.</param>
-        protected override void FindCentroid(List<Vector3> vertices, Cell3D cell)
+        protected override void FindCentroid(List<Vector3D> vertices, Cell3D cell)
         {
-            float areaSum = 0;
+            double areaSum = 0;
 
-            var centroid = new Vector3();
+            var centroid = new Vector3D();
 
-            var triangles = this.Triangulate(vertices);
+            // To compute centroid of a polyhedron it needs to be triangulated
+            var tetrahedrons = this.Triangulate(vertices);
 
-            foreach (var triangle in triangles)
+            // For each tetrahedron compute its area and centroid
+            foreach (var tetrahedron in tetrahedrons)
             {
-                float area = 0;
+                double area = 0;
 
-                var vertex1 = triangle.Vertices[0].Position;
-                var vertex2 = triangle.Vertices[1].Position;
-                var vertex3 = triangle.Vertices[2].Position;
-                var vertex4 = triangle.Vertices[3].Position;
+                var vertex1 = tetrahedron.Vertices[0].Position;
+                var vertex2 = tetrahedron.Vertices[1].Position;
+                var vertex3 = tetrahedron.Vertices[2].Position;
+                var vertex4 = tetrahedron.Vertices[3].Position;
 
-                double[] vector1 = { vertex2[0] - vertex1[0], vertex2[1] - vertex1[1], vertex2[2] - vertex1[2] };
-                double[] vector2 = { vertex3[0] - vertex2[0], vertex3[1] - vertex2[1], vertex3[2] - vertex2[2] };
-                double[] vector3 = { vertex4[0] - vertex3[0], vertex4[1] - vertex3[1], vertex4[2] - vertex3[2] };
+                // Prepare edges of the tetrahedron
+                var vector1 = new Vector3D(vertex2[0] - vertex1[0], vertex2[1] - vertex1[1], vertex2[2] - vertex1[2]);
+                var vector2 = new Vector3D(vertex3[0] - vertex2[0], vertex3[1] - vertex2[1], vertex3[2] - vertex2[2]);
+                var vector3 = new Vector3D(vertex4[0] - vertex3[0], vertex4[1] - vertex3[1], vertex4[2] - vertex3[2]);
 
-                area = (float)Math.Abs(
-                    vector1[0] * ((vector2[1] * vector3[2]) - (vector2[2] * vector3[1])) 
-                    - vector1[1] * ((vector2[0] * vector3[2]) - (vector2[2] * vector3[0]))
-                    + vector1[2] * ((vector2[0] * vector3[1]) - (vector2[1] * vector3[0]))
-                    ) / 6;
+                // Area of a tetrahedron is determinant of three vectors that represent different edges
+                area = Math.Abs(vector1.Dot(vector2.Cross(vector3))) / 6;
 
-                centroid.X += (float)((vertex1[0] + vertex2[0] + vertex3[0] + vertex4[0]) / 4) * area;
-                centroid.Y += (float)((vertex1[1] + vertex2[1] + vertex3[1] + vertex4[1]) / 4) * area;
-                centroid.Z += (float)((vertex1[2] + vertex2[2] + vertex3[2] + vertex4[2]) / 4) * area;
+                // Add weighted centroid of this tetrahedron to others
+                centroid.X += (vertex1[0] + vertex2[0] + vertex3[0] + vertex4[0]) / 4 * area;
+                centroid.Y += (vertex1[1] + vertex2[1] + vertex3[1] + vertex4[1]) / 4 * area;
+                centroid.Z += (vertex1[2] + vertex2[2] + vertex3[2] + vertex4[2]) / 4 * area;
 
+                // Add area of this triangle
                 areaSum += area;
             }
 
@@ -143,7 +150,10 @@ namespace VolumeIntersection
             centroid.Y /= areaSum;
             centroid.Z /= areaSum;
 
+            // Save total area of this cell
             cell.Weight = areaSum;
+
+            // Centroid of the polyhedron
             cell.Centroid = centroid;
         }
 
@@ -154,38 +164,13 @@ namespace VolumeIntersection
         /// <param name="edge2">Second edge.</param>
         /// <param name="edge3">Third edge.</param>
         /// <returns>The intersection point.</returns>
-        private Vector3 FindIntersectionPoint(Edge3D edge1, Edge3D edge2, Edge3D edge3)
+        private Vector3D FindIntersectionPoint(Edge3D edge1, Edge3D edge2, Edge3D edge3)
         {
-            // Compute a standard form from vertices that generates it.
-            // It can be calculated with a system of linear equations. I use determinant to do it.
-            // Example of the calculation of a plane from three vertices:
-            //  | i   j  k l |
-            //  | a1 b1 c1 1 |
-            //  | a2 b2 c2 1 |
-            //  | a3 b3 c3 1 |
-            // i, j, k, l are vectors with just one coordinate set to 1
-            // i = (1, 0, 0, 0)
-            // j = (0, 1, 0, 0)
-            // k = (0, 0, 1, 0)
-            // l = (0, 0, 0, 1)
-            // a, b, c are coordinates of a vertex
-            // Elements of a standard form of a half space are computed as determinant of this matrix. 
-            // However I have no means to combine vectors and scalars inside the matrix so I use a way around it.
-            // I use Laplace expansion to calculate result of the determinant above and  
-            // compute determinants of its submatrices directly and assign results to the elements of the standard form.
-            // Submatrices are
-            // | b1 c1 1 | | a1 c1 1 | | a1 b1 1 | | a1 b1 c1 |
-            // | b2 c2 1 | | a2 c2 1 | | a2 b2 1 | | a2 b2 c2 |
-            // | b3 c3 1 | | a3 c3 1 | | a3 b3 1 | | a3 b3 c3 |
-
-
-            var w = -(edge1.Normal.X * ((edge2.Normal.Y * edge3.Normal.Z) - (edge2.Normal.Z * edge3.Normal.Y))
-                - edge1.Normal.Y * ((edge2.Normal.X * edge3.Normal.Z) - (edge2.Normal.Z * edge3.Normal.X))
-                + edge1.Normal.Z * ((edge2.Normal.X * edge3.Normal.Y) - (edge2.Normal.Y * edge3.Normal.X)));
+            var w = -edge1.Normal.Dot(edge2.Normal.Cross(edge3.Normal));
 
             if (w != 0)
             {
-                return new Vector3(
+                return new Vector3D(
                     // First coordinate
                     (edge1.Normal.Y * ((edge2.Normal.Z * edge3.C) - (edge2.C * edge3.Normal.Z))
                     - edge1.Normal.Z * ((edge2.Normal.Y * edge3.C) - (edge2.C * edge3.Normal.Y))
@@ -202,14 +187,15 @@ namespace VolumeIntersection
             }
             else
             {
-                return new Vector3(float.NaN);
+                return new Vector3D(double.NaN);
             }
         }
 
-        private IEnumerable<DefaultTriangulationCell<MIVertex>> Triangulate(List<Vector3> vertices)
+        private IEnumerable<DefaultTriangulationCell<MIVertex>> Triangulate(List<Vector3D> vertices)
         {
             IEnumerable<DefaultTriangulationCell<MIVertex>> triangles = null;
 
+            // Convert vertices to objects that work with MIConvexHull library
             MIVertex[] miVertices = new MIVertex[vertices.Count];
             for (int i = 0; i < vertices.Count; i++)
             {
@@ -218,10 +204,12 @@ namespace VolumeIntersection
 
             if (vertices.Count == 4)
             {
+                // MIConvexHull library cannot create a triangulation from a single tetrahedron
                 triangles = new List<DefaultTriangulationCell<MIVertex>>() { new DefaultTriangulationCell<MIVertex>() { Vertices = miVertices } };
             }
             else
             {
+                // More vertices are OK so let the library to triangulate them
                 var triangulation = Triangulation.CreateDelaunay(miVertices);
                 triangles = triangulation.Cells;
             }

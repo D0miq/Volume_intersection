@@ -33,7 +33,7 @@ namespace VolumeIntersection
         /// <summary>
         /// Weight (volume) of this cell.
         /// </summary>
-        public float Weight { get; set; }
+        public double Weight { get; set; }
 
         /// <summary>
         /// Was this cell visited during calculations? 
@@ -52,7 +52,7 @@ namespace VolumeIntersection
         /// </summary>
         /// <param name="dirFunction">Direction function.</param>
         /// <returns>True - cell contains the point, false otherwise.</returns>
-        protected bool Contains(Func<TEdge, float> dirFunction)
+        protected bool Contains(Func<TEdge, double> dirFunction)
         {
             foreach (var edge in this.Edges)
             {

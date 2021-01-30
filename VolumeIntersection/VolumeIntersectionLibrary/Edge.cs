@@ -19,7 +19,7 @@ namespace VolumeIntersection
         /// <summary>
         /// Constant element of the standard form of this half space.
         /// </summary>
-        public float C { get; set; }
+        public double C { get; set; }
 
         /// <summary>
         /// Source cell of this half space.

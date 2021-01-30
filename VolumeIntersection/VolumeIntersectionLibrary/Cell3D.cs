@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Numerics;
 
 namespace VolumeIntersection
 {
     /// <summary>
     /// Three dimensional volumetric cell.
     /// </summary>
-    public class Cell3D : Cell<Vector3, Edge3D>
+    public class Cell3D : Cell<Vector3D, Edge3D>
     {
         /// <summary>
         /// Creates a new 3D cell.
@@ -21,9 +20,9 @@ namespace VolumeIntersection
         /// </summary>
         /// <param name="point">The point.</param>
         /// <returns>True - cell contains the point, false otherwise.</returns>
-        public override bool Contains(Vector3 point)
+        public override bool Contains(Vector3D point)
         {
-            return base.Contains((edge) => Vector3.Dot(edge.Normal, point) + edge.C);
+            return base.Contains((edge) => edge.Normal.Dot(point) + edge.C);
         }
     }
 }
