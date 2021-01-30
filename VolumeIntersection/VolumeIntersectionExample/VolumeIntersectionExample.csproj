@@ -55,8 +55,8 @@
     <Compile Include="Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tetrahedralization.cs" />
-    <Compile Include="TetrahedralizationReader.cs" />
+    <Compile Include="Triangulation.cs" />
+    <Compile Include="TriangulationReader.cs" />
     <Compile Include="Vertex.cs" />
   </ItemGroup>
   <ItemGroup>
