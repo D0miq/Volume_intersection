@@ -77,7 +77,7 @@ namespace VolumeIntersection.VolumeVisualisation
         /// <param name="zValue">Slicing value.</param>
         /// <param name="volume">3D Volumetric data.</param>
         /// <param name="volumeBoundingBox">Bounding box.</param>
-        public static void Visualise3D(Bitmap bitmap, float zValue, VolumeData3D volume, BoundingBox3D volumeBoundingBox)
+        public static void Visualise3D(Bitmap bitmap, double zValue, VolumeData3D volume, BoundingBox3D volumeBoundingBox)
         {
             // Setup color of each cell
             var colors = SetupColors(volume.Cells.Count);
