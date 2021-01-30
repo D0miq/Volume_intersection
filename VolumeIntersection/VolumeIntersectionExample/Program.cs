@@ -1,15 +1,109 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VolumeIntersection;
+using VolumeIntersection.VolumeVisualisation;
 
 namespace VolumeIntersectionExample
 {
+    /// <summary>
+    /// Class that runs examples.
+    /// </summary>
     class Program
     {
+        /// <summary>
+        /// Creates a boudning box of 3D vertices.
+        /// </summary>
+        /// <param name="vertices">Vertices.</param>
+        /// <returns>The bounding box.</returns>
+        private static BoundingBox3D CreateBoundingBox3D(List<Vertex> vertices)
+        {
+            var min = new Vector3D(double.MaxValue);
+            var max = new Vector3D(double.MinValue);
+
+            // Find min and max positions of vertices
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                var position = vertices[i].Position;
+
+                if (min.X > position[0])
+                {
+                    min.X = position[0];
+                }
+
+                if (min.Y > position[1])
+                {
+                    min.Y = position[1];
+                }
+
+                if(min.Z > position[2])
+                {
+                    min.Z = position[2];
+                }
+
+                if (max.X < position[0])
+                {
+                    max.X = position[0];
+                }
+
+                if (max.Y < position[1])
+                {
+                    max.Y = position[1];
+                }
+
+                if(max.Z < position[2])
+                {
+                    max.Z = position[2];
+                }
+            }
+
+            // Assing min and max.
+            return new BoundingBox3D(min, max);
+        }
+
+        /// <summary>
+        /// Creates a bounding box from 2D vertices.
+        /// </summary>
+        /// <param name="vertices">Vertices.</param>
+        /// <returns>Bounding box.</returns>
+        private static BoundingBox2D CreateBoundingBox2D(List<Vertex> vertices)
+        {
+            var min = new Vector2D(double.MaxValue);
+            var max = new Vector2D(double.MinValue);
+
+            // Find min and max positions of vertices
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                var position = vertices[i].Position;
+
+                if(min.X > position[0])
+                {
+                    min.X = position[0];
+                }
+
+                if(min.Y > position[1])
+                {
+                    min.Y = position[1];
+                }
+
+                if(max.X < position[0])
+                {
+                    max.X = position[0];
+                }
+
+                if(max.Y < position[1])
+                {
+                    max.Y = position[1];
+                }
+            }
+
+            // Assing min and max.
+            return new BoundingBox2D(min, max);
+        }
+
+        /// <summary>
+        /// Test voronoi volumetric data in 3D
+        /// </summary>
         public static void TestFromVoronoi3D()
         {
             var generators = new List<Vertex>()
@@ -27,6 +121,9 @@ namespace VolumeIntersectionExample
             volumeData.FromVoronoi(generators);
         }
 
+        /// <summary>
+        /// Test triangulation volumetric data in 2D.
+        /// </summary>
         public static void TestFromTriangulationSingleTriangle()
         {
             var vertices = new List<Vertex>()
@@ -36,15 +133,18 @@ namespace VolumeIntersectionExample
                 new Vertex(0, 1)
             };
 
-            var triangles = new List<Tetrahedron>()
+            var triangles = new List<Triangle>()
             {
-                new Tetrahedron(0, 1, 2)
+                new Triangle(0, 1, 2)
             };
 
             var volumeData = new VolumeData2D();
             volumeData.FromTriangulation(vertices, triangles);
         }
 
+        /// <summary>
+        /// Test triangulation volumetric data in 3D.
+        /// </summary>
         public static void TestFromTriangulationSingleTetrahedron()
         {
             var vertices = new List<Vertex>()
@@ -55,15 +155,18 @@ namespace VolumeIntersectionExample
                 new Vertex(0, 0, 1)
             };
 
-            var tetrahedra = new List<Tetrahedron>()
+            var tetrahedra = new List<Triangle>()
             {
-                new Tetrahedron(0, 1, 2, 3)
+                new Triangle(0, 1, 2, 3)
             };
 
             var volumeData = new VolumeData3D();
             volumeData.FromTriangulation(vertices, tetrahedra);
         }
 
+        /// <summary>
+        /// Test intersections in 2D.
+        /// </summary>
         public static void TestIntersect2D()
         {
             var vertices = new List<Vertex>()
@@ -73,9 +176,9 @@ namespace VolumeIntersectionExample
                 new Vertex(0, 1)
             };
 
-            var triangles = new List<Tetrahedron>()
+            var triangles = new List<Triangle>()
             {
-                new Tetrahedron(0, 1, 2)
+                new Triangle(0, 1, 2)
             };
 
             var generators = new List<Vertex>()
@@ -90,6 +193,9 @@ namespace VolumeIntersectionExample
             var volumeData = new VolumeIntersection2D().Intersect(vertices, triangles, generators);
         }
 
+        /// <summary>
+        /// Test intersection in 3D.
+        /// </summary>
         public static void TestIntersect3D()
         {
             var vertices = new List<Vertex>()
@@ -100,9 +206,9 @@ namespace VolumeIntersectionExample
                 new Vertex(0, 0, 1)
             };
 
-            var triangles = new List<Tetrahedron>()
+            var triangles = new List<Triangle>()
             {
-                new Tetrahedron(0, 1, 2, 3)
+                new Triangle(0, 1, 2, 3)
             };
 
             var generators = new List<Vertex>()
@@ -119,15 +225,13 @@ namespace VolumeIntersectionExample
             var volumeData = new VolumeIntersection3D().Intersect(vertices, triangles, generators);
         }
 
+        /// <summary>
+        /// Test intersection in 3D on a small dataset.
+        /// </summary>
         public static void TestIntersectSmallData()
         {
-            var reader = new TetrahedralizationReader();
+            var reader = new TriangulationReader();
             var tetrahedralization = reader.Read("smalldata.dat");
-
-            //var tetrahedralizationData = VolumeData<Vertex>.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
-            //var bitmap = new System.Drawing.Bitmap(800, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.4, tetrahedralizationData);
-            //bitmap.Save("smalldata.png");
 
             Random rd = new Random();
             var generators = new List<Vertex>();
@@ -137,22 +241,33 @@ namespace VolumeIntersectionExample
                 generators.Add(new Vertex(rd.NextDouble() * 0.6 + 0.1, rd.NextDouble() * 0.9, rd.NextDouble() * 0.7 + 0.2) { Index = i });
             }
 
-            //var voronoiData = VolumeData<Vertex>.FromVoronoi(generators);
-            //voronoiData.BoundingBox = tetrahedralizationData.BoundingBox;
-            //bitmap = new System.Drawing.Bitmap(800, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.4, voronoiData);
+            //var boundingBox = CreateBoundingBox3D(tetrahedralization.Vertices);
+
+            //var voronoiData = new VolumeData3D();
+            //voronoiData.FromVoronoi(generators);
+
+            //var tetrahedralizationData = new VolumeData3D();
+            //tetrahedralizationData.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
+
+            //var bitmap = new System.Drawing.Bitmap(800, 800);
+            //VolumeVisualisator.Visualise3D(bitmap, 0.4, voronoiData, boundingBox);
             //bitmap.Save("voronoiSmallData.png");
+
+            //bitmap = new System.Drawing.Bitmap(800, 800);
+            //VolumeVisualisator.Visualise3D(bitmap, 0.4, tetrahedralizationData, boundingBox);
+            //bitmap.Save("smalldata.png");
 
             var volumeData = new VolumeIntersection3D().Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
 
-            //volumeData.BoundingBox = tetrahedralizationData.BoundingBox;
-
             //bitmap = new System.Drawing.Bitmap(800, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.4, volumeData);
+            //VolumeVisualisator.Visualise3D(bitmap, 0.4, volumeData, boundingBox);
             //bitmap.Save("intersectSmallData.png");
         }
 
-        public static void TestExampleData()
+        /// <summary>
+        /// Test intersections in 3D on a big dataset.
+        /// </summary>
+        public static void TestIntersectExampleData()
         {
             var parser = new Parser();
             var generators = new List<Vertex>();
@@ -170,7 +285,7 @@ namespace VolumeIntersectionExample
                 }
             }
 
-            var reader = new TetrahedralizationReader();
+            var reader = new TriangulationReader();
             var tetrahedralization = reader.Read("example.dat");
 
             for (int i = 0; i < tetrahedralization.Indices.Count; i++)
@@ -183,24 +298,27 @@ namespace VolumeIntersectionExample
                 }
             }
 
-            //var boundingBox = new BoundingBox<Vertex>(tetrahedralization.Vertices, 3);
+            //var boundingBox = CreateBoundingBox3D(tetrahedralization.Vertices);
 
-            //var voronoiData = VolumeData<Vertex>.FromVoronoi(generators);
+            //var voronoiData = new VolumeData3D();
+            //voronoiData.FromVoronoi(generators);
+
+            //var tetrahedralizationData = new VolumeData3D();
+            //tetrahedralizationData.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
 
             //var bitmap = new System.Drawing.Bitmap(800, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.4, voronoiData, boundingBox);
+            //VolumeVisualisator.Visualise3D(bitmap, 0.4, voronoiData, boundingBox);
             //bitmap.Save("export000.png");
 
             //bitmap = new System.Drawing.Bitmap(800, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.4, tetrahedralizationData, boundingBox);
+            //VolumeVisualisator.Visualise3D(bitmap, 0.4, tetrahedralizationData, boundingBox);
             //bitmap.Save("example.png");
 
             var volumeIntersection = new VolumeIntersection3D();
-
             var volumeData = volumeIntersection.Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
 
             //bitmap = new System.Drawing.Bitmap(800, 800);
-            //VolumeSlicer.Slice(bitmap, 2, 0.4, volumeData, boundingBox);
+            //VolumeVisualisator.Visualise3D(bitmap, 0.4, volumeData, boundingBox);
             //bitmap.Save("intersectExample.png");
         }
 
@@ -212,7 +330,7 @@ namespace VolumeIntersectionExample
             //TestIntersect2D();
             //TestIntersect3D();
             //TestIntersectSmallData();
-            TestExampleData();
+            TestIntersectExampleData();
         }
     }
 }

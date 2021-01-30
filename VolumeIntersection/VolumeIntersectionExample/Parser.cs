@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VolumeIntersectionExample
 {
-
+    /// <summary>
+    /// Parses input from a file.
+    /// </summary>
     class Parser
     {
         /// <summary>
