@@ -70,27 +70,15 @@ namespace VolumeIntersection
         /// <returns>Created edge.</returns>
         protected override Edge2D ComputeTriangleEdge(Vector2D[] vertices, int[] indices, Cell2D cell)
         {
-            var normal = new Vector2D();
-
-            // Compute determinant 3x3
-            double order = vertices[indices[0]].X * (vertices[indices[1]].Y - cell.Centroid.Y)
-                - vertices[indices[0]].Y * (vertices[indices[1]].X - cell.Centroid.X)
-                + (vertices[indices[1]].X * cell.Centroid.Y - cell.Centroid.X * vertices[indices[1]].Y);
+            var normal = new Vector2D(vertices[indices[1]].Y - vertices[indices[0]].Y, -(vertices[indices[1]].X - vertices[indices[0]].X));
+            double c = -normal.Dot(vertices[indices[0]]);
 
             // Check winding order of the edge and compute normal accordingly.
-            if (order < 0)
+            if (normal.Dot(cell.Centroid) + c < 0)
             {
-                normal.X = vertices[indices[1]].Y - vertices[indices[0]].Y;
-                normal.Y = -(vertices[indices[1]].X - vertices[indices[0]].X);
+                normal = -normal;
+                c = -c;
             }
-            else
-            {
-                normal.X = -(vertices[indices[1]].Y - vertices[indices[0]].Y);
-                normal.Y = vertices[indices[1]].X - vertices[indices[0]].X;
-            }
-
-            // Compute last element of a half edge.
-            double c = -normal.Dot(vertices[indices[0]]);
 
             // Create new edge
             var edge = new Edge2D()
