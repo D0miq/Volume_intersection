@@ -1,4 +1,4 @@
-﻿namespace VolumeIntersection
+﻿namespace VolumeIntersectionLibrary.DataStructures._2D
 {
     /// <summary>
     /// Structure for a 2D vector.

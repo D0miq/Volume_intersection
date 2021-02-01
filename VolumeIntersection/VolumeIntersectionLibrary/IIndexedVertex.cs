@@ -1,6 +1,6 @@
 ﻿using MIConvexHull;
 
-namespace VolumeIntersection
+namespace VolumeIntersectionLibrary
 {
     /// <summary>
     /// Vertex which also contains its index.

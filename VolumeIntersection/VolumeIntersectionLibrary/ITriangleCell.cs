@@ -1,4 +1,4 @@
-﻿namespace VolumeIntersection
+﻿namespace VolumeIntersectionLibrary
 {
     /// <summary>
     /// N dimensional triangle cells (can be a triangle or tetrahedron).

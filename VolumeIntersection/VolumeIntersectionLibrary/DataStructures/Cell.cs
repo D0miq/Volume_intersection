@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace VolumeIntersection
+namespace VolumeIntersectionLibrary.DataStructures
 {
     /// <summary>
     /// Volumetric cell.

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using VolumeIntersectionLibrary.DataStructures._2D;
+using VolumeIntersectionLibrary.DataStructures._3D;
 
-namespace VolumeIntersection.VolumeVisualisation
+namespace VolumeIntersectionLibrary.Visualisation
 {
     /// <summary>
     /// Visualisation of a volumetric data.

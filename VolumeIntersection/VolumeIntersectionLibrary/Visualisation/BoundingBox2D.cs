@@ -1,4 +1,6 @@
-﻿namespace VolumeIntersection.VolumeVisualisation
+﻿using VolumeIntersectionLibrary.DataStructures._2D;
+
+namespace VolumeIntersectionLibrary.Visualisation
 {
     /// <summary>
     /// 2D bounding box.

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using VolumeIntersectionLibrary.DataStructures._2D;
 
-namespace VolumeIntersection
+namespace VolumeIntersectionLibrary
 {
     /// <summary>
     /// Comparer that compares two 2D vectors.

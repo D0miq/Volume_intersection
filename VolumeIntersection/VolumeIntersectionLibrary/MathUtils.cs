@@ -1,4 +1,4 @@
-﻿namespace VolumeIntersection
+﻿namespace VolumeIntersectionLibrary
 {
     /// <summary>
     /// Math operations.

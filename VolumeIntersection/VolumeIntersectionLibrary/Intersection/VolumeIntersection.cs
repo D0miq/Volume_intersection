@@ -1,8 +1,10 @@
 ﻿using MIConvexHull;
 using System;
 using System.Collections.Generic;
+using VolumeIntersectionLibrary.DataStructures;
+using VolumeIntersectionLibrary.Intersection.HalfSpaceRemoval;
 
-namespace VolumeIntersection
+namespace VolumeIntersectionLibrary.Intersection
 {
     /// <summary>
     /// Generic class for intersections of volumetric data.
@@ -69,13 +71,18 @@ namespace VolumeIntersection
         protected int Dimension;
 
         /// <summary>
-        /// Removes redundant half spaces and creates a minimal intersection of two cells.
+        /// Half space removal algorithm.
         /// </summary>
-        /// <param name="c1">First cell.</param>
-        /// <param name="c2">Second cell.</param>
-        /// <param name="intersectionPoints">Intersection points.</param>
-        /// <returns>List of half spaces.</returns>
-        protected abstract List<TEdge> RemoveHalfSpaces(TCell c1, TCell c2, out List<TVector> intersectionPoints);
+        private IHalfSpaceRemoval<TVector, TCell, TEdge> halfSpaceRemoval;
+
+        /// <summary>
+        /// Creates a new instance with a specific half space removal algorithm.
+        /// </summary>
+        /// <param name="halfSpaceRemoval">Half space removal algorithm.</param>
+        public VolumeIntersection(IHalfSpaceRemoval<TVector, TCell, TEdge> halfSpaceRemoval)
+        {
+            this.halfSpaceRemoval = halfSpaceRemoval;
+        }
 
         /// <summary>
         /// Finds centroid of a cell.
@@ -171,7 +178,7 @@ namespace VolumeIntersection
 
                 // Remove unnecessary edges from cells to create an intersection
                 List<TVector> intersectionPoints;
-                var edges = RemoveHalfSpaces(tempFirstCell, tempSecondCell, out intersectionPoints);
+                var edges = this.halfSpaceRemoval.RemoveHalfSpaces(tempFirstCell, tempSecondCell, out intersectionPoints);
 
                 // Continue traversal over each edge
                 foreach (var edge in edges)

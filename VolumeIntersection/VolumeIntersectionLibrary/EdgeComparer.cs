@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace VolumeIntersection
+namespace VolumeIntersectionLibrary
 {
     /// <summary>
     /// Compares two edges defined as an array of integers.

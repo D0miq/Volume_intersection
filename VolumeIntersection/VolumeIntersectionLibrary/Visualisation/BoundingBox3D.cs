@@ -1,4 +1,6 @@
-﻿namespace VolumeIntersection.VolumeVisualisation
+﻿using VolumeIntersectionLibrary.DataStructures._3D;
+
+namespace VolumeIntersectionLibrary.Visualisation
 {
     /// <summary>
     /// 3D boundin box.

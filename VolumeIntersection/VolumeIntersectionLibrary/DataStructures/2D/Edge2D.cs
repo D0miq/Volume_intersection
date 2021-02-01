@@ -1,4 +1,4 @@
-﻿namespace VolumeIntersection
+﻿namespace VolumeIntersectionLibrary.DataStructures._2D
 {
     /// <summary>
     /// Edge describes a two dimensional half space that separates two cells. 

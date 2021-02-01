@@ -1,4 +1,4 @@
-﻿namespace VolumeIntersection
+﻿namespace VolumeIntersectionLibrary.DataStructures._3D
 {
     /// <summary>
     /// Structure for a 3D vector.

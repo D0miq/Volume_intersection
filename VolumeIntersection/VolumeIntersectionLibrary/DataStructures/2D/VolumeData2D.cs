@@ -1,23 +1,23 @@
 ﻿using System.Collections.Generic;
 
-namespace VolumeIntersection
+namespace VolumeIntersectionLibrary.DataStructures._2D
 {
     /// <summary>
-    /// Three dimensional volumetric data.
+    /// Two dimensional volumetric data.
     /// </summary>
-    public class VolumeData3D : VolumeData<Vector3D, Cell3D, Edge3D>
+    public class VolumeData2D : VolumeData<Vector2D, Cell2D, Edge2D>
     {
         /// <summary>
         /// Dimension of this data.
         /// </summary>
-        public const int Dimension = 3;
+        public const int Dimension = 2;
 
         /// <summary>
-        /// Creates a new three dimensional volumetric data.
+        /// Creates a new two dimensional volumetric data.
         /// </summary>
-        public VolumeData3D()
+        public VolumeData2D()
         {
-            base.Cells = new List<Cell3D>();
+            base.Cells = new List<Cell2D>();
         }
 
         /// <summary>
@@ -26,14 +26,14 @@ namespace VolumeIntersection
         /// <typeparam name="TInVertex">Type of input vertices.</typeparam>
         /// <param name="vertices">Vertices.</param>
         /// <returns>Vertices in internal format.</returns>
-        protected override Vector3D[] CopyVertices<TVector>(List<TVector> vertices)
+        protected override Vector2D[] CopyVertices<TVector>(List<TVector> vertices)
         {
             // Save vertices to an array 
-            var vertexArray = new Vector3D[vertices.Count];
+            var vertexArray = new Vector2D[vertices.Count];
             for (int i = 0; i < vertices.Count; i++)
             {
                 var position = vertices[i].Position;
-                vertexArray[i] = new Vector3D(position[0], position[1], position[2]);
+                vertexArray[i] = new Vector2D(position[0], position[1]);
             }
 
             return vertexArray;
@@ -45,20 +45,18 @@ namespace VolumeIntersection
         /// <param name="indices">Vertex indices.</param>
         /// <param name="vertices">Vertices.</param>
         /// <returns>The centroid.</returns>
-        protected override Vector3D ComputeCentroid(int[] indices, Vector3D[] vertices)
+        protected override Vector2D ComputeCentroid(int[] indices, Vector2D[] vertices)
         {
             // Compute centroid of the cell
-            var centroid = new Vector3D();
+            var centroid = new Vector2D();
             for (int i = 0; i < indices.Length; i++)
             {
                 centroid.X += vertices[indices[i]].X;
                 centroid.Y += vertices[indices[i]].Y;
-                centroid.Z += vertices[indices[i]].Z;
             }
 
             centroid.X /= indices.Length;
             centroid.Y /= indices.Length;
-            centroid.Z /= indices.Length;
 
             return centroid;
         }
@@ -70,19 +68,12 @@ namespace VolumeIntersection
         /// <param name="indices">Indices of an edge.</param>
         /// <param name="cell">Cell that should contain the edge.</param>
         /// <returns>Created edge.</returns>
-        protected override Edge3D ComputeTriangleEdge(Vector3D[] vertices, int[] indices, Cell3D cell)
+        protected override Edge2D ComputeTriangleEdge(Vector2D[] vertices, int[] indices, Cell2D cell)
         {
-            // Create two vectors from edges of a face.
-            var v1 = vertices[indices[0]] - vertices[indices[1]];
-            var v2 = vertices[indices[2]] - vertices[indices[1]];
-
-            // Calculate normal as a cross product of two edges
-            var normal = v1.Cross(v2);
-
-            // Calculate last element of a plane that describes a face.
+            var normal = new Vector2D(vertices[indices[1]].Y - vertices[indices[0]].Y, -(vertices[indices[1]].X - vertices[indices[0]].X));
             double c = -normal.Dot(vertices[indices[0]]);
 
-            // Check winding order and reverse normal if necessary;
+            // Check winding order of the edge and compute normal accordingly.
             if (normal.Dot(cell.Centroid) + c < 0)
             {
                 normal = -normal;
@@ -90,7 +81,7 @@ namespace VolumeIntersection
             }
 
             // Create new edge
-            var edge = new Edge3D()
+            var edge = new Edge2D()
             {
                 Normal = normal,
                 C = c,
@@ -110,16 +101,16 @@ namespace VolumeIntersection
         /// <param name="generator">Generator of a voronoi cell.</param>
         /// <param name="cells">Cells dictionary.</param>
         /// <returns>The cell.</returns>
-        protected override Cell3D AddCellToDictionary<TVector>(TVector generator, Cell3D[] cells)
+        protected override Cell2D AddCellToDictionary<TVector>(TVector generator, Cell2D[] cells)
         {
-            Cell3D cell = cells[generator.Index];
+            Cell2D cell = cells[generator.Index];
             if (cell == null)
             {
                 var position = generator.Position;
 
-                cell = new Cell3D()
+                cell = new Cell2D()
                 {
-                    Centroid = new Vector3D(position[0], position[1], position[2]),
+                    Centroid = new Vector2D(position[0], position[1]),
                     VoronoiIndex = generator.Index,
                     TriangleIndex = -1
                 };
@@ -137,19 +128,19 @@ namespace VolumeIntersection
         /// <param name="targetPosition">Position of a generator of a target cell.</param>
         /// <param name="sourceCell">Source cell.</param>
         /// <param name="targetCell">Target cel.</param>
-        protected override void ComputeVoronoiEdge(double[] sourcePosition, double[] targetPosition, Cell3D sourceCell, Cell3D targetCell)
+        protected override void ComputeVoronoiEdge(double[] sourcePosition, double[] targetPosition, Cell2D sourceCell, Cell2D targetCell)
         {
             // Compute a vector that points towards the source position
-            var normal = new Vector3D(sourcePosition[0] - targetPosition[0], sourcePosition[1] - targetPosition[1], sourcePosition[2] - targetPosition[2]);
+            var normal = new Vector2D(sourcePosition[0] - targetPosition[0], sourcePosition[1] - targetPosition[1]);
 
             // Compute a point in the middle between the two positions
-            var middlePosition = new Vector3D((sourcePosition[0] + targetPosition[0]) / 2, (sourcePosition[1] + targetPosition[1]) / 2, (sourcePosition[2] + targetPosition[2]) / 2);
+            var middlePosition = new Vector2D((sourcePosition[0] + targetPosition[0]) / 2, (sourcePosition[1] + targetPosition[1]) / 2);
 
             // Compute last element of a half space standard form that separates the source and target positions and goes through the middle position
             double c = -normal.Dot(middlePosition);
 
             // Add the neighbor
-            sourceCell.Edges.Add(new Edge3D()
+            sourceCell.Edges.Add(new Edge2D()
             {
                 Normal = normal,
                 C = c,
@@ -158,7 +149,7 @@ namespace VolumeIntersection
             });
 
             // Add the neighbor
-            targetCell.Edges.Add(new Edge3D()
+            targetCell.Edges.Add(new Edge2D()
             {
                 Normal = -normal,
                 C = -c,

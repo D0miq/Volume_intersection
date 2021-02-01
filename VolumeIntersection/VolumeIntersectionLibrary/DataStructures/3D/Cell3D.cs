@@ -1,18 +1,18 @@
 ﻿using System.Collections.Generic;
 
-namespace VolumeIntersection
+namespace VolumeIntersectionLibrary.DataStructures._3D
 {
     /// <summary>
-    /// Two dimensional volumetric cell.
+    /// Three dimensional volumetric cell.
     /// </summary>
-    public class Cell2D : Cell<Vector2D, Edge2D>
+    public class Cell3D : Cell<Vector3D, Edge3D>
     {
         /// <summary>
-        /// Creates a new 2D cell.
+        /// Creates a new 3D cell.
         /// </summary>
-        public Cell2D()
+        public Cell3D()
         {
-            this.Edges = new List<Edge2D>();
+            this.Edges = new List<Edge3D>();
         }
 
         /// <summary>
@@ -20,7 +20,7 @@ namespace VolumeIntersection
         /// </summary>
         /// <param name="point">The point.</param>
         /// <returns>True - cell contains the point, false otherwise.</returns>
-        public override bool Contains(Vector2D point)
+        public override bool Contains(Vector3D point)
         {
             return base.Contains((edge) => edge.Normal.Dot(point) + edge.C);
         }

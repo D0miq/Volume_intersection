@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace VolumeIntersection
+namespace VolumeIntersectionLibrary.DataStructures
 {
     /// <summary>
     /// Edge describes a half space that separates two cells. 
