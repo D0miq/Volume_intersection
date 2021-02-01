@@ -1,4 +1,4 @@
-﻿using VolumeIntersection;
+﻿using VolumeIntersectionLibrary;
 
 namespace VolumeIntersectionExample
 {

@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using VolumeIntersection;
-using VolumeIntersection.VolumeVisualisation;
+using VolumeIntersectionLibrary;
+using VolumeIntersectionLibrary.DataStructures._2D;
+using VolumeIntersectionLibrary.DataStructures._3D;
+using VolumeIntersectionLibrary.Intersection;
+using VolumeIntersectionLibrary.Intersection.HalfSpaceRemoval;
+using VolumeIntersectionLibrary.IO;
+using VolumeIntersectionLibrary.Visualisation;
 
 namespace VolumeIntersectionExample
 {
@@ -190,7 +195,7 @@ namespace VolumeIntersectionExample
                 new Vertex(0, -1) { Index = 4 },
             };
 
-            var volumeData = new VolumeIntersection2D().Intersect(vertices, triangles, generators);
+            var volumeData = new VolumeIntersection2D(new BruteForceHalfSpaceRemoval2D()).Intersect(vertices, triangles, generators);
         }
 
         /// <summary>
@@ -222,7 +227,7 @@ namespace VolumeIntersectionExample
                 new Vertex(0, 0, -1) { Index = 6 }
             };
 
-            var volumeData = new VolumeIntersection3D().Intersect(vertices, triangles, generators);
+            var volumeData = new VolumeIntersection3D(new BruteForceHalfSpaceRemoval3D()).Intersect(vertices, triangles, generators);
         }
 
         /// <summary>
@@ -257,7 +262,7 @@ namespace VolumeIntersectionExample
             //VolumeVisualisator.Visualise3D(bitmap, 0.4, tetrahedralizationData, boundingBox);
             //bitmap.Save("smalldata.png");
 
-            var volumeData = new VolumeIntersection3D().Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
+            var volumeData = new VolumeIntersection3D(new BruteForceHalfSpaceRemoval3D()).Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
 
             //bitmap = new System.Drawing.Bitmap(800, 800);
             //VolumeVisualisator.Visualise3D(bitmap, 0.4, volumeData, boundingBox);
@@ -303,8 +308,8 @@ namespace VolumeIntersectionExample
             //var voronoiData = new VolumeData3D();
             //voronoiData.FromVoronoi(generators);
 
-            //var tetrahedralizationData = new VolumeData3D();
-            //tetrahedralizationData.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
+            var tetrahedralizationData = new VolumeData3D();
+            tetrahedralizationData.FromTriangulation(tetrahedralization.Vertices, tetrahedralization.Indices);
 
             //var bitmap = new System.Drawing.Bitmap(800, 800);
             //VolumeVisualisator.Visualise3D(bitmap, 0.4, voronoiData, boundingBox);
@@ -314,8 +319,11 @@ namespace VolumeIntersectionExample
             //VolumeVisualisator.Visualise3D(bitmap, 0.4, tetrahedralizationData, boundingBox);
             //bitmap.Save("example.png");
 
-            var volumeIntersection = new VolumeIntersection3D();
+            var volumeIntersection = new VolumeIntersection3D(new BruteForceHalfSpaceRemoval3D());
             var volumeData = volumeIntersection.Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
+
+            var writer = new VolumeData3DWriter(',');
+            writer.Write("test.txt", tetrahedralizationData);
 
             //bitmap = new System.Drawing.Bitmap(800, 800);
             //VolumeVisualisator.Visualise3D(bitmap, 0.4, volumeData, boundingBox);
