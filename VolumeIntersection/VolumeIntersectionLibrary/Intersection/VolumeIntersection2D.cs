@@ -27,10 +27,6 @@ namespace VolumeIntersectionLibrary.Intersection
         /// <param name="cell">The cell.</param>
         protected override void FindCentroid(List<Vector2D> vertices, Cell2D cell)
         {
-            // TODO: Triangulation of 2D vertices doesn't work there is missing code for 4 vertices.
-            // Remove return when finished.
-            return;
-
             double areaSum = 0;
             var centroid = new Vector2D();
 
@@ -73,33 +69,72 @@ namespace VolumeIntersectionLibrary.Intersection
         /// <returns>The triangulation.</returns>
         private IEnumerable<DefaultTriangulationCell<MIVertex>> Triangulate(List<Vector2D> vertices)
         {
-            IEnumerable<DefaultTriangulationCell<MIVertex>> triangles = null;
-
-            // Convert vertices to objects that work with MIConvexHull library
-            MIVertex[] miVertices = new MIVertex[vertices.Count];
-            for(int i = 0; i < vertices.Count; i++)
-            {
-                miVertices[i] = new MIVertex(vertices[i].X, vertices[i].Y);
-            }
-
             if(vertices.Count == 3)
             {
+                // Convert vertices to objects that work with MIConvexHull library
+                MIVertex[] miVertices = new MIVertex[vertices.Count];
+                for (int i = 0; i < vertices.Count; i++)
+                {
+                    miVertices[i] = new MIVertex(vertices[i].X, vertices[i].Y);
+                }
+
                 // MIConvexHull library cannot create a triangulation from a single triangle
-                triangles = new List<DefaultTriangulationCell<MIVertex>>() { new DefaultTriangulationCell<MIVertex>() { Vertices = miVertices } };
+                return new List<DefaultTriangulationCell<MIVertex>>() { new DefaultTriangulationCell<MIVertex>() { Vertices = miVertices } };
             }
-            if(vertices.Count == 4)
+            else if (vertices.Count == 4)
             {
                 // There are problems with 4 vertices in MIConvexHull algorithms. There are multiple issues on their github
-                // TODO Separate four unordered vertices to two triangles
+
+                Vector2D average = new Vector2D();
+
+                for (int i = 0; i < vertices.Count; i++)
+                {
+                    average.X += vertices[i].X;
+                    average.Y += vertices[i].Y;
+                }
+
+                average.X /= vertices.Count;
+                average.Y /= vertices.Count;
+
+                // Convert vertices to objects that work with MIConvexHull library
+                List<MIVertex> miVertices = new List<MIVertex>(vertices.Count);
+                for (int i = 0; i < vertices.Count; i++)
+                {
+                    miVertices.Add(new MIVertex(vertices[i].X, vertices[i].Y));
+                }
+
+                miVertices.Sort(Comparer<MIVertex>.Create((item1, item2) => {
+                    var position1 = item1.Position;
+                    var position2 = item2.Position;
+
+                    double a1 = ((Math.Atan2(position1[0] - average.X, position1[1] - average.Y) * 180 / Math.PI) + 360) % 360;
+                    double a2 = ((Math.Atan2(position2[0] - average.X, position2[1] - average.Y) * 180 / Math.PI) + 360) % 360;
+                    return (int)(a1 - a2);
+                }));
+
+                var triangles = new List<DefaultTriangulationCell<MIVertex>>();
+
+                for (int i = 1; i < miVertices.Count - 1; i++)
+                {
+                    MIVertex[] tempVertices = { miVertices[0], miVertices[i], miVertices[i + 1] };
+                    triangles.Add(new DefaultTriangulationCell<MIVertex>() { Vertices = tempVertices });
+                }
+
+                return triangles;
             }
             else
             {
+                // Convert vertices to objects that work with MIConvexHull library
+                MIVertex[] miVertices = new MIVertex[vertices.Count];
+                for (int i = 0; i < vertices.Count; i++)
+                {
+                    miVertices[i] = new MIVertex(vertices[i].X, vertices[i].Y);
+                }
+
                 // More vertices are OK so let the library to triangulate them
                 var triangulation = Triangulation.CreateDelaunay(miVertices);
-                triangles = triangulation.Cells;
+                return triangulation.Cells;
             }
-
-            return triangles;
         }
     }
 }
