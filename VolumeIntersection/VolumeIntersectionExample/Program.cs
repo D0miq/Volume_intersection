@@ -235,7 +235,7 @@ namespace VolumeIntersectionExample
         public static void TestIntersectSmallData()
         {
             var reader = new TriangulationReader();
-            var tetrahedralization = reader.Read("smalldata.dat");
+            var tetrahedralization = reader.Read("Data/smallTetra.dat");
 
             Random rd = new Random();
             var generators = new List<Vertex>();
@@ -255,11 +255,11 @@ namespace VolumeIntersectionExample
 
             var bitmap = new System.Drawing.Bitmap(800, 800);
             VolumeVisualisator.Visualise3D(bitmap, 0.4, voronoiData, boundingBox);
-            bitmap.Save("voronoiSmallData.png");
+            bitmap.Save("smallVoronoi.png");
 
             bitmap = new System.Drawing.Bitmap(800, 800);
             VolumeVisualisator.Visualise3D(bitmap, 0.4, tetrahedralizationData, boundingBox);
-            bitmap.Save("smalldata.png");
+            bitmap.Save("smallTetra.png");
 
             var volumeData = new VolumeIntersection3D(new BruteForceHalfSpaceRemoval3D()).Intersect(tetrahedralization.Vertices, tetrahedralization.Indices, generators);
 
@@ -276,7 +276,7 @@ namespace VolumeIntersectionExample
             var parser = new Parser();
             var generators = new List<Vertex>();
 
-            using (var streamReader = new StreamReader("export000.txt"))
+            using (var streamReader = new StreamReader("Data/exampleVoronoi.txt"))
             {
                 int i = 0;
                 string line;
@@ -290,7 +290,7 @@ namespace VolumeIntersectionExample
             }
 
             var reader = new TriangulationReader();
-            var tetrahedralization = reader.Read("example.dat");
+            var tetrahedralization = reader.Read("Data/exampleTetra.dat");
 
             for (int i = 0; i < tetrahedralization.Indices.Count; i++)
             {
